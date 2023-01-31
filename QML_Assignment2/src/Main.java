@@ -8,23 +8,25 @@ import java.io.*;
  */
 public class Main {
     public static void main(String[] args) throws IloException {
-        int[][] cost_matrix = new int[33][33];
+        int[][] coordinate_matrix = new int[2][21];
+        coordinate_matrix[0][0] = 0;
+        coordinate_matrix[0][1] = 0;
         //Import excel
-        File file = new File("Austin_distances.csv");
+        File file = new File("QML_Assignment2/RuinsRotterdam.csv");
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line = br.readLine();
-            int i = 0;
+            int location = 1;
             String[] parts = line.split(",");
-            int J = parts.length;
+            int dimensions = parts.length;
 
 
             while (line != null) {
                 parts = line.split(",");
-                for (int j = 0; j < J; j++) {
-                    cost_matrix[i][j] = Integer.parseInt(parts[j]);
+                for (int coordinate = 0; coordinate < dimensions; coordinate++) {
+                    coordinate_matrix[coordinate][location] = Integer.parseInt(parts[coordinate]);
                 }
 
-                i++;
+                location++;
                 line = br.readLine();
             }
 
@@ -32,48 +34,21 @@ public class Main {
             e.printStackTrace();
         }
         
-        //Import weights
-        int[] weights_vector = new int[33];
-        File file2 = new File("weight_of_distances.csv");
-        try (BufferedReader br2 = new BufferedReader(new FileReader(file2))) {
-            String line2 = br2.readLine();
-            int i = 0;
-            while (line2 != null) {
-                weights_vector[i] = Integer.parseInt(line2);
-                i++;
-                line2 = br2.readLine();
+        // Creating distance matrix
+        double[][] distance_matrix = new double[21][21];
+        for (int i = 0; i < 21; i++) {
+            for (int j = 0; j < 21; j++) {
+                distance_matrix[i][j] = Math.sqrt(Math.pow((coordinate_matrix[0][i] - coordinate_matrix[0][j]),2) +
+                        Math.pow((coordinate_matrix[1][i] - coordinate_matrix[1][j]),2));
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
-        // Small instance
-        int[][] small_instance_distances = new int[9][6];
-        int[] small_instance_weights = new int[9];
-        int[] demandPoints = {8, 16, 19, 23, 24, 26, 28, 32, 33};
-        int[] facilityLocations = {8, 9, 11, 14, 23, 27};
+        // VRP1
+        int maximum_charge = 50;
+        int time_limit = 235;
 
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 6; j++) {
-                small_instance_distances[i][j] = cost_matrix[demandPoints[i] - 1][facilityLocations[j] - 1];
-            }
-            small_instance_weights[i] = weights_vector[demandPoints[i] - 1];
-        }
-
-        // Initialize and solve for the small instance (exercise 1)
-        pMeanModel model_small = new pMeanModel(small_instance_weights, small_instance_distances, 4);
-        model_small.solveModel();
-
-        // Initialize and solve for the full instance (exercise 2)
-        pMeanModel model = new pMeanModel(weights_vector, cost_matrix, 4);
+        // Initialize and solve for the exercise 1
+        VRP1 model = new VRP1(distance_matrix, maximum_charge, time_limit);
         model.solveModel();
-
-        // Initialize and solve for given alpha and delta in the modified p-Mean model (exercise 5)
-        for (int a = 70; a <= 100; a++) {
-            pMeanModelEx4 modelex4 = new pMeanModelEx4(weights_vector, cost_matrix, 4, 8, a);
-            System.out.println(a);
-            modelex4.solveModel();
-        }
     }
 }
