@@ -7,14 +7,13 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" exported="">
+    <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file://C:/Program Files/IBM/ILOG/CPLEX_Studio221/cplex/lib" />
+          <root url="jar:///Applications/CPLEX_Studio221/cplex/lib/cplex.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
-        <jarDirectory url="file://C:/Program Files/IBM/ILOG/CPLEX_Studio221/cplex/lib" recursive="false" />
       </library>
     </orderEntry>
   </component>
