@@ -41,8 +41,8 @@ public class VRP1 {
                 t_matrix[i][j] = 5 + Math.pow(d_matrix[i][j], 0.9);
                 z_matrix[i][j] = cplex.boolVar("Arc (" + i + "," + j + ")");
             }
-            q_vector[i] = cplex.numVar(0, Q, "Electric used at location " + i);
-            t_vector[i] = cplex.numVar(0, T, "Time at location " + i);
+            q_vector[i] = cplex.numVar(0, Q);
+            t_vector[i] = cplex.numVar(0, T);
         }
     }
 
@@ -92,7 +92,6 @@ public class VRP1 {
                             System.out.println("Location " + i + ", " + j);
                             System.out.println("Charge:" + q_vector[i] + ", time: " + t_vector[i]);
                     }
-                    System.out.println();
                 }
             }
         }
