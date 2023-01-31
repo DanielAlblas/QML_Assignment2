@@ -25,8 +25,14 @@ public class VRP1 {
         Q = maxElectricity;
         T = maxTime;
 
+        c_matrix = new double[nLocations][nLocations];
+        q_matrix = new double[nLocations][nLocations];
+        t_matrix = new double[nLocations][nLocations];
+
         // Creating the decision variables: matrix x and vector y
         z_matrix = new IloNumVar[nLocations][nLocations];
+        q_vector = new IloNumVar[nLocations];
+        t_vector = new IloNumVar[nLocations];
 
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
@@ -66,10 +72,35 @@ public class VRP1 {
 
 
         for (int i = 0; i < nLocations; i++) {
-            for (int j = 1; i < nLocations; j++) {
+            for (int j = 1; j < nLocations; j++) {
                 cplex.addLe(cplex.prod(z_matrix[i][j], (q_matrix[i][j] + q_matrix[j][0])), q_vector[i]);
                 cplex.addLe(cplex.prod(z_matrix[i][j], (t_matrix[i][j] + t_matrix[j][0])), t_vector[i]);
             }
         }
+
+        // Solve the model
+        cplex.setOut(null);
+        cplex.solve ();
+
+        // Query the solution
+        if (cplex.getStatus () == IloCplex.Status.Optimal) {
+            System.out.println("Found optimal solution!");
+            System.out.println("Objective = " + cplex.getObjValue ());
+            for (int j = 0; j < nLocations; j++) {
+                    for (int i = 0; i < nLocations; i++) {
+                        if (cplex.getValue(z_matrix[i][j]) >= 0.5) {
+                            System.out.println("Location " + i + ", " + j);
+                            System.out.println("Charge:" + q_vector[i] + ", time: " + t_vector[i]);
+                    }
+                    System.out.println();
+                }
+            }
+        }
+        else {
+            System.out.println("No optimal solution found");
+        }
+
+        // Close the model
+        cplex.close ();
     }
 }
