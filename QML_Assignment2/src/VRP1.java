@@ -152,8 +152,8 @@ public class VRP1 {
                     cplex.addGe(time_matrix[j][k], cplex.diff(cplex.sum(time_matrix[i][k], t_matrix[i+1][j+1]), cplex.prod(T, cplex.diff(1, z_matrix[i+1][j+1][k]))));
                     cplex.addGe(charge_matrix[j][k], cplex.diff(cplex.sum(charge_matrix[i][k], q_matrix[i+1][j+1]), cplex.prod(Q, cplex.diff(1, z_matrix[i+1][j+1][k]))));
                 }
-                cplex.addLe(cplex.sum(time_matrix[i][k], t_matrix[i][21]), T);
-                cplex.addLe(cplex.sum(charge_matrix[i][k], q_matrix[i][21]), Q);
+                cplex.addLe(cplex.sum(time_matrix[i][k], t_matrix[i+1][21]), T);
+                cplex.addLe(cplex.sum(charge_matrix[i][k], q_matrix[i+1][21]), Q);
             }
         }
 
