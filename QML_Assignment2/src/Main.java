@@ -50,7 +50,7 @@ public class Main {
         double time_limit = 235;
 
         // Initialize and solve for the exercise 1
-        VRP1 model = new VRP1(distance_matrix, maximum_charge, time_limit);
+        VRP model = new VRP(distance_matrix, maximum_charge, time_limit);
         model.solveModel();
     }
 }
