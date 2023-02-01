@@ -41,8 +41,8 @@ public class VRP1 {
                 t_matrix[i][j] = 5 + Math.pow(d_matrix[i][j], 0.9);
                 z_matrix[i][j] = cplex.boolVar("Arc (" + i + "," + j + ")");
             }
-            q_vector[i] = cplex.numVar(0, Q);
-            t_vector[i] = cplex.numVar(0, T);
+            q_vector[i] = cplex.numVar(0, Double.POSITIVE_INFINITY);
+            t_vector[i] = cplex.numVar(0, Double.POSITIVE_INFINITY);
         }
     }
 
@@ -57,6 +57,10 @@ public class VRP1 {
         cplex.addMinimize(obj);
 
         // Add the restrictions
+
+        cplex.addEq(q_vector[0], 0);
+        cplex.addEq(t_vector[0], 0);
+
         // Constraints 1 and 2 (LHS1 and LHS) ensures every location (except the depot) is entered and left once
         for (int j = 1; j < nLocations; j++) {
             IloNumExpr LHS1 = cplex.constant(0);
@@ -69,17 +73,24 @@ public class VRP1 {
             cplex.addEq(LHS2, 1);
         }
 
-
-
         for (int i = 0; i < nLocations; i++) {
-            for (int j = 1; j < nLocations; j++) {
-                cplex.addLe(cplex.prod(z_matrix[i][j], (q_matrix[i][j] + q_matrix[j][0])), q_vector[i]);
-                cplex.addLe(cplex.prod(z_matrix[i][j], (t_matrix[i][j] + t_matrix[j][0])), t_vector[i]);
+            for (int j = 0; j < nLocations; j++) {
+                if (i != j) {
+//                    cplex.addLe(cplex.sum(cplex.sum(cplex.prod(T, z_matrix[i][j]), cplex.prod(t_matrix[i][j],z_matrix[i][j])), t_vector[i]), cplex.sum(t_vector[j], T));
+//                    cplex.addLe(cplex.sum(cplex.prod(Q + q_matrix[i][j], z_matrix[i][j]), q_vector[i]), cplex.sum(q_vector[j], Q));
+                } else {
+                    cplex.addEq(z_matrix[i][j], 0);
+                }
             }
         }
 
+        for (int j = 1; j < nLocations; j++) {
+//            cplex.addLe(cplex.sum(t_vector[j], cplex.prod(t_matrix[j][0], z_matrix[j][0])), T);
+//            cplex.addLe(cplex.sum(q_vector[j], cplex.prod(q_matrix[j][0], z_matrix[j][0])), Q);
+        }
+
         // Solve the model
-        cplex.setOut(null);
+//        cplex.setOut(null);
         cplex.solve ();
 
         // Query the solution
