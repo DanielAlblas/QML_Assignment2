@@ -19,6 +19,7 @@ public class VRP1 {
     private IloNumVar[] t_vector;
     private IloNumVar[][] time_matrix;
     private IloNumVar[][] charge_matrix;
+    private IloNumVar[][] u_matrix;
 
     public VRP1(double[][] distances, double maxElectricity, double maxTime) throws IloException {
         // Initialize the cplex solver
@@ -40,6 +41,7 @@ public class VRP1 {
 
         time_matrix = new IloNumVar[nLocations][nLocations];
         charge_matrix = new IloNumVar[nLocations][nLocations];
+        u_matrix = new IloNumVar[nLocations-1][nLocations];
 
         //TODO: might be able to use nLocations-1 in the loops instead of below line 47
         for (int k = 0; k < nLocations; k++) {
@@ -56,6 +58,12 @@ public class VRP1 {
                 t_matrix[i][j] = 5 + Math.pow(d_matrix[i][j], 0.9);
                 time_matrix[i][j] = cplex.numVar(0, T);
                 charge_matrix[i][j] = cplex.numVar(0, Q);
+            }
+        }
+
+        for (int i = 0; i < nLocations-1; i++) {
+            for (int k = 0; k < nLocations; k++) {
+                u_matrix[i][k] = cplex.intVar(1,nLocations-1);
             }
         }
 
@@ -138,6 +146,14 @@ public class VRP1 {
             }
         }
 
+        for (int k = 0; k < nLocations; k++) {
+            for (int i = 0; i < nLocations-1; i++) {
+                for (int j = 0; j < nLocations-1; j++) {
+                    cplex.addGe(u_matrix[j][k], cplex.diff(cplex.sum(u_matrix[i][k], 1), cplex.prod(nLocations-3, cplex.diff(1, z_matrix[i+1][j+1][k]))));
+                }
+            }
+        }
+
         //potential bigM calculation (wrong for now)
 //        double bigM = Q - q_matrix[1][nLocations-1] - q_matrix[1][0];
 //        for (int i = 0; i < nLocations; i++) {
@@ -150,7 +166,7 @@ public class VRP1 {
 //            }
 //        }
 //        System.out.println(bigM);
-
+//
 //
 //        double bigM = Q;
 //
@@ -176,21 +192,6 @@ public class VRP1 {
 //            }
 //        }
 
-        //3.7
-//        for (int k = 0; k < nLocations; k++) {
-//            cplex.addEq(charge_matrix[0][k], 0);
-//            for (int i = 0; i < nLocations; i++) {
-//                for (int j = 0; j < nLocations; j++) {
-////                    cplex.addLe(cplex.prod(z_matrix[i][j][k], cplex.sum(cplex.sum(charge_matrix[i][k], q_matrix[i][j]), cplex.prod(-1, charge_matrix[j][k]))), 0);
-//                    cplex.addLe(cplex.prod(z_matrix[i][j][k], cplex.diff(cplex.sum(charge_matrix[i][k], q_matrix[i][j]), charge_matrix[j][k])), 0);
-//                }
-//                cplex.addGe(charge_matrix[i][k], 0);
-//                cplex.addLe(charge_matrix[i][k], Q - q_matrix[i][nLocations - 1]);
-//            }
-//        }
-
-//        cplex.addEq(q_vector[0], 0);
-//        cplex.addEq(t_vector[0], 0);
 
         //summed
 //        for (int i = 0; i < nLocations; i++) {
