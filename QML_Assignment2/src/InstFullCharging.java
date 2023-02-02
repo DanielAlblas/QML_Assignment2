@@ -186,6 +186,12 @@ public class InstFullCharging {
         for (int i = 0; i < nLocations; i++) {
             cplex.addEq(z_matrix[i][i], 0);
         }
+        
+        for (int i = 0; i < nLocations; i++) {
+            for (int k = nV+1; k < nV+nC+1; k++) {
+                cplex.addLe(q_vector[i], cplex.sum(cplex.prod(Q, cplex.diff(1, z_matrix[k][i])), q_matrix[k][i]));
+            }
+        }
 
         cplex.setOut(null);
         cplex.solve();
