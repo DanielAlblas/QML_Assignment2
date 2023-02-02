@@ -138,10 +138,10 @@ public class InstFullCharging {
                 cplex.addGe(t_vector[j], RHS_time);
 
 
-//                IloNumExpr RHS_charge = cplex.diff(cplex.sum(q_vector[i],
-//                        cplex.prod(q_matrix[i][j], z_matrix[i][j])),
-//                        cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
-//                cplex.addGe(q_vector[j], RHS_charge);
+               IloNumExpr RHS_charge = cplex.diff(cplex.sum(q_vector[i],
+                       cplex.prod(q_matrix[i][j], z_matrix[i][j])),
+                       cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
+               cplex.addGe(q_vector[j], RHS_charge);
 
 //                IloNumExpr chargedOrNot = cplex.constant(0);
 //                for (int k = nV+1; k <= nV + nC; k++) {
@@ -153,13 +153,13 @@ public class InstFullCharging {
             }
         }
 
-        for (int i = nV + 1; i < nV + nC + 1; i++) {
-            for (int j = 0; j < nLocations; j++) {
-                IloNumExpr RHS_charge = cplex.diff(cplex.prod(q_matrix[i][j], z_matrix[i][j]),
-                        cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
-                cplex.addGe(q_vector[j], RHS_charge);
-            }
-        }
+//         for (int i = nV + 1; i < nV + nC + 1; i++) {
+//             for (int j = 0; j < nLocations; j++) {
+//                 IloNumExpr RHS_charge = cplex.diff(cplex.prod(q_matrix[i][j], z_matrix[i][j]),
+//                         cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
+//                 cplex.addGe(q_vector[j], RHS_charge);
+//             }
+//         }
 //        for (int i = 1; i < nLocations; i++) {
 //            IloNumExpr RHS_charge = cplex.constant(Q);
 //            for (int k = nV + 1; k < nV + nC + 1; k++) {
