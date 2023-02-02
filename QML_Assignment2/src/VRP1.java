@@ -39,8 +39,8 @@ public class VRP1 {
         q_vector = new IloNumVar[nLocations];
         t_vector = new IloNumVar[nLocations];
 
-        time_matrix = new IloNumVar[nLocations-1][nLocations];
-        charge_matrix = new IloNumVar[nLocations-1][nLocations];
+        time_matrix = new IloNumVar[nLocations][nLocations];
+        charge_matrix = new IloNumVar[nLocations][nLocations];
         u_matrix = new IloNumVar[nLocations-1][nLocations];
 
         //TODO: might be able to use nLocations-1 in the loops instead of below line 47
@@ -56,14 +56,14 @@ public class VRP1 {
                 c_matrix[i][j] = 1 + d_matrix[i][j];
                 q_matrix[i][j] = 10 + Math.pow(d_matrix[i][j], 0.75);
                 t_matrix[i][j] = 5 + Math.pow(d_matrix[i][j], 0.9);
+                time_matrix[i][j] = cplex.numVar(0, T);
+                charge_matrix[i][j] = cplex.numVar(0, Q);
             }
         }
 
         for (int i = 0; i < nLocations-1; i++) {
             for (int k = 0; k < nLocations; k++) {
                 u_matrix[i][k] = cplex.intVar(1,nLocations-1);
-                time_matrix[i][k] = cplex.numVar(0, T);
-                charge_matrix[i][k] = cplex.numVar(0, Q);
             }
         }
 
@@ -147,13 +147,15 @@ public class VRP1 {
         }
 
         for (int k = 0; k < nLocations; k++) {
-            for (int i = 0; i < nLocations-1; i++) {
-                for (int j = 0; j < nLocations-1; j++) {
-                    cplex.addGe(time_matrix[j][k], cplex.diff(cplex.sum(time_matrix[i][k], t_matrix[i+1][j+1]), cplex.prod(T, cplex.diff(1, z_matrix[i+1][j+1][k]))));
-                    cplex.addGe(charge_matrix[j][k], cplex.diff(cplex.sum(charge_matrix[i][k], q_matrix[i+1][j+1]), cplex.prod(Q, cplex.diff(1, z_matrix[i+1][j+1][k]))));
+            cplex.addEq(time_matrix[0][k], 0);
+            cplex.addEq(charge_matrix[0][k], 0);
+            for (int i = 0; i < nLocations; i++) {
+                for (int j = 0; j < nLocations; j++) {
+                    cplex.addGe(time_matrix[j][k], cplex.diff(cplex.sum(time_matrix[i][k], t_matrix[i][j]), cplex.prod(T, cplex.diff(1, z_matrix[i][j][k]))));
+                    cplex.addGe(charge_matrix[j][k], cplex.diff(cplex.sum(charge_matrix[i][k], q_matrix[i][j]), cplex.prod(Q, cplex.diff(1, z_matrix[i][j][k]))));
                 }
-                cplex.addLe(cplex.sum(time_matrix[i][k], t_matrix[i+1][21]), T);
-                cplex.addLe(cplex.sum(charge_matrix[i][k], q_matrix[i+1][21]), Q);
+                cplex.addLe(cplex.sum(time_matrix[i][k], t_matrix[i][21]), T);
+                cplex.addLe(cplex.sum(charge_matrix[i][k], q_matrix[i][21]), Q);
             }
         }
 
