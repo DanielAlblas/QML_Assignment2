@@ -49,9 +49,9 @@ public class Main {
         double maximum_charge = 50;
         double time_limit = 235;
 
-        // Initialize and solve for the exercise 1
-        VRP model = new VRP(distance_matrix, maximum_charge, time_limit);
-        model.solveModel();
+//        // Initialize and solve for the exercise 1
+//        VRP model = new VRP(distance_matrix, maximum_charge, time_limit);
+//        model.solveModel();
 
         int[][] coordinate_matrix_temp = new int[2][6];
         int[][] coordinate_matrix2 = new int[2][28];
@@ -96,10 +96,10 @@ public class Main {
 
         // Creating distance matrix
         distance_matrix = new double[28][28];
-        for (int i = 0; i < 22; i++) {
-            for (int j = 0; j < 22; j++) {
-                distance_matrix[i][j] = Math.sqrt(Math.pow((coordinate_matrix[0][i] - coordinate_matrix[0][j]),2) +
-                        Math.pow((coordinate_matrix[1][i] - coordinate_matrix[1][j]),2));
+        for (int i = 0; i < 28; i++) {
+            for (int j = 0; j < 28; j++) {
+                distance_matrix[i][j] = Math.sqrt(Math.pow((coordinate_matrix2[0][i] - coordinate_matrix2[0][j]),2) +
+                        Math.pow((coordinate_matrix2[1][i] - coordinate_matrix2[1][j]),2));
             }
         }
 
