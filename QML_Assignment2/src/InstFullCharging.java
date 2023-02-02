@@ -2,6 +2,8 @@ import ilog.concert.IloException;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
+import java.util.List;
+import java.util.ArrayList;
 
 public class InstFullCharging {
     private int nLocations;
@@ -93,12 +95,13 @@ public class InstFullCharging {
         // 2c
         for (int i = nC; i <= nV + nC; i++) {
             IloNumExpr LHS2c = cplex.constant(0);
-            for (int j = 1; j <= nV + nC + 1; j++) {
+            for (int j = 1; j <= nV; j++) {
                 if (j != i) {
                     LHS2c = cplex.sum(LHS2c, z_matrix[i][j]);
                 }
             }
             // Including also the arc goes to the ending depot
+            LHS2c = cplex.sum(LHS2c, z_matrix[i][nV+nC+1]);
             cplex.addLe(LHS2c, 1);
         }
 
@@ -130,8 +133,8 @@ public class InstFullCharging {
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 IloNumExpr RHS_time = cplex.diff(cplex.sum(t_vector[i],
-                                                           cplex.prod(t_matrix[i][j], z_matrix[i][j])),
-                                                 cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
+                        cplex.prod(t_matrix[i][j], z_matrix[i][j])),
+                        cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
                 cplex.addGe(t_vector[j], RHS_time);
 
 
@@ -163,17 +166,28 @@ public class InstFullCharging {
                     System.out.print("Route " + route + ": 0");
                     int from = 0;
                     int to = i;
+                    int numStationsVisited = 0;
+                    List<Double> chargedBetweenStations = new ArrayList<>();
                     double totalDistance = 0;
                     double totalCost = 0;
                     double totalTime = 0;
                     double totalCharge = 0;
-                    while (to < nLocations) {
+                    while (to <= 21) {
                         if (cplex.getValue(z_matrix[from][to]) >= 0.5) {
                             totalDistance += d_matrix[from][to];
                             totalCost += c_matrix[from][to];
                             totalTime += t_matrix[from][to];
                             totalCharge += q_matrix[from][to];
                             //System.out.print("Go from " + from + " to " + to);
+
+                            if (to >= 21 && to <= 26) {
+                                if (chargedBetweenStations.isEmpty()) {
+                                    chargedBetweenStations.add(totalCharge);
+                                } else {
+                                    chargedBetweenStations.add(totalCharge - chargedBetweenStations.get(chargedBetweenStations.size() - 1));
+                                }
+                            }
+
                             System.out.print(", " + to);
                             from = to;
                             to = 0;
@@ -186,6 +200,12 @@ public class InstFullCharging {
                     System.out.println("Total cost = " + totalCost);
                     System.out.println("Total time = " + totalTime);
                     System.out.println("Total charge = " + totalCharge);
+                    if (!chargedBetweenStations.isEmpty()) {
+                        for (Double c : chargedBetweenStations) {
+                            System.out.print(c + ",");
+                        }
+                    }
+                    System.out.println();
                     System.out.println();
                 }
             }
