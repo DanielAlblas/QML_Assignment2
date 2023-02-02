@@ -167,27 +167,21 @@ public class InstFullCharging {
                     int from = 0;
                     int to = i;
                     int numStationsVisited = 0;
-                    List<Double> chargedBetweenStations = new ArrayList<>();
+                    List<Double> totalChargedAtStations = new ArrayList<>();
                     double totalDistance = 0;
                     double totalCost = 0;
                     double totalTime = 0;
                     double totalCharge = 0;
-                    while (to <= 21) {
+                    while (to < nLocations) {
                         if (cplex.getValue(z_matrix[from][to]) >= 0.5) {
                             totalDistance += d_matrix[from][to];
                             totalCost += c_matrix[from][to];
                             totalTime += t_matrix[from][to];
                             totalCharge += q_matrix[from][to];
-                            //System.out.print("Go from " + from + " to " + to);
-
                             if (to >= 21 && to <= 26) {
-                                if (chargedBetweenStations.isEmpty()) {
-                                    chargedBetweenStations.add(totalCharge);
-                                } else {
-                                    chargedBetweenStations.add(totalCharge - chargedBetweenStations.get(chargedBetweenStations.size() - 1));
-                                }
+                                totalChargedAtStations.add(totalCharge);
                             }
-
+                            //System.out.print("Go from " + from + " to " + to);
                             System.out.print(", " + to);
                             from = to;
                             to = 0;
@@ -200,9 +194,10 @@ public class InstFullCharging {
                     System.out.println("Total cost = " + totalCost);
                     System.out.println("Total time = " + totalTime);
                     System.out.println("Total charge = " + totalCharge);
-                    if (!chargedBetweenStations.isEmpty()) {
-                        for (Double c : chargedBetweenStations) {
-                            System.out.print(c + ",");
+                    System.out.print("Total charged when the vehicle arrives at the charging stations: ");
+                    if (!totalChargedAtStations.isEmpty()) {
+                        for (Double c : totalChargedAtStations) {
+                            System.out.print(c + "  ");
                         }
                     }
                     System.out.println();
