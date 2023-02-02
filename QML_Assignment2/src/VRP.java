@@ -141,6 +141,11 @@ public class VRP {
             }
         }
         
+        // Decision variables constraints
+        for (int i = 0; i < nLocations; i++) {
+            cplex.addEq(z_matrix[i][i], 0);
+        }
+        
         cplex.setOut(null);
         cplex.solve();
 
