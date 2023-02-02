@@ -35,7 +35,7 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         // Creating distance matrix
         double[][] distance_matrix = new double[22][22];
         for (int i = 0; i < 22; i++) {
@@ -103,7 +103,7 @@ public class Main {
             }
         }
 
-//        VRP model2 = new VRP2(distance_matrix, maximum_charge, time_limit, 20, 6);
-//        model2.solveModel();
+        VRP model2 = new InstFullCharging(distance_matrix, maximum_charge, time_limit, 20, 6);
+        model2.solveModel();
     }
 }
