@@ -160,7 +160,7 @@ public class VRP {
                     double totalCost = 0;
                     double totalTime = 0;
                     double totalCharge = 0;
-                    while (to <= 21) {
+                    while (to < nLocations) {
                         if (cplex.getValue(z_matrix[from][to]) >= 0.5) {
                             totalDistance += d_matrix[from][to];
                             totalCost += c_matrix[from][to];

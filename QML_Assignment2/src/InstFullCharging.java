@@ -93,13 +93,12 @@ public class InstFullCharging {
         // 2c
         for (int i = nC; i <= nV + nC; i++) {
             IloNumExpr LHS2c = cplex.constant(0);
-            for (int j = 1; j <= nV; j++) {
+            for (int j = 1; j <= nV + nC + 1; j++) {
                 if (j != i) {
                     LHS2c = cplex.sum(LHS2c, z_matrix[i][j]);
                 }
             }
             // Including also the arc goes to the ending depot
-            LHS2c = cplex.sum(LHS2c, z_matrix[i][nV+nC+1]);
             cplex.addLe(LHS2c, 1);
         }
 
@@ -168,7 +167,7 @@ public class InstFullCharging {
                     double totalCost = 0;
                     double totalTime = 0;
                     double totalCharge = 0;
-                    while (to <= 21) {
+                    while (to < nLocations) {
                         if (cplex.getValue(z_matrix[from][to]) >= 0.5) {
                             totalDistance += d_matrix[from][to];
                             totalCost += c_matrix[from][to];

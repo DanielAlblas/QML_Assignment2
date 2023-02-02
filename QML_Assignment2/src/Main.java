@@ -103,7 +103,7 @@ public class Main {
             }
         }
 
-        VRP model2 = new InstFullCharging(distance_matrix, maximum_charge, time_limit, 20, 6);
+        InstFullCharging model2 = new InstFullCharging(distance_matrix, maximum_charge, time_limit, 20, 6);
         model2.solveModel();
     }
 }
