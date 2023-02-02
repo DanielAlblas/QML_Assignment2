@@ -130,19 +130,20 @@ public class InstFullCharging {
         // 2e + 2f
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
+                IloNumExpr RHS_time = cplex.diff(cplex.sum(t_vector[i],
+                                                           cplex.prod(t_matrix[i][j], z_matrix[i][j])),
+                                                 cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
+                cplex.addGe(t_vector[j], RHS_time);
+
+
                 IloNumExpr chargedOrNot = cplex.constant(0);
                 for (int k = nV+1; k <= nV + nC; k++) {
                     chargedOrNot = cplex.sum(chargedOrNot, z_matrix[k][i]);
                 }
                 chargedOrNot = cplex.diff(1, chargedOrNot);
-                
-                IloNumExpr RHS_time = cplex.diff(cplex.sum(cplex.prod(t_vector[i], chargedOrNot), 
-                                                           cplex.prod(t_matrix[i][j], z_matrix[i][j])),
-                                                 cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
-                cplex.addGe(t_vector[j], RHS_time);
 
                 IloNumExpr RHS_charge = cplex.diff(cplex.sum(q_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
-                        cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
+                        cplex.prod(Q, cplex.sum(cplex.diff(1, z_matrix[i][j]), chargedOrNot)));
                 cplex.addGe(q_vector[j], RHS_charge);
             }
         }
