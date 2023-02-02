@@ -181,6 +181,11 @@ public class InstFullCharging {
 //        for (int i = nV + 1; i < nV + nC + 1; i++) {
 //            cplex.addEq(q_vector[i], 0);
 //        }
+        
+        // Decision variables constraints
+        for (int i = 0; i < nLocations; i++) {
+            cplex.addEq(z_matrix[i][i], 0);
+        }
 
         cplex.setOut(null);
         cplex.solve();
