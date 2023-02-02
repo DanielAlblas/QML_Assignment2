@@ -84,22 +84,42 @@ public class VRP {
             cplex.addEq(LHS2, 1);
         }
 
-        // 2.3
-        for (int h = 1; h < nLocations-1; h++) {
+//        // 2.3
+//        for (int k = 1; k < nLocations-1; k++) {
+//            IloNumExpr LHS3 = cplex.constant(0);
+//            for (int i = 0; i < nLocations-1; i++) {
+//                if (i != k) {
+//                    LHS3 = cplex.sum(LHS3, z_matrix[i][k]);
+//                }
+//            }
+//
+//            for (int j = 1; j < nLocations; j++) {
+//                if (j != k) {
+//                    LHS3 = cplex.diff(LHS3, z_matrix[k][j]);
+//                }
+//            }
+//            cplex.addEq(LHS3, 0);
+//        }
+
+        // 2.3.2
+        for (int k = 1; k < nLocations-1; k++) {
             IloNumExpr LHS3 = cplex.constant(0);
+            IloNumExpr LHS4 = cplex.constant(0);
             for (int i = 0; i < nLocations-1; i++) {
-                if (i != h) {
-                    LHS3 = cplex.sum(LHS3, z_matrix[i][h]);
+                if (i != k) {
+                    LHS3 = cplex.sum(LHS3, z_matrix[i][k]);
                 }
             }
 
             for (int j = 1; j < nLocations; j++) {
-                if (j != h) {
-                    LHS3 = cplex.diff(LHS3, z_matrix[h][j]);
+                if (j != k) {
+                    LHS4 = cplex.sum(LHS3, z_matrix[k][j]);
                 }
             }
-            cplex.addEq(LHS3, 0);
+            cplex.addEq(LHS3, 1);
+//            cplex.addEq(LHS4, 1);
         }
+
 
         // 2.4
 //        IloNumExpr LHS4 = cplex.constant(0);
