@@ -1,6 +1,7 @@
 import ilog.concert.IloException;
 
 import java.io.*;
+import java.util.ArrayList;
 
 /**
  * @author 574244hn Hoang Thi Khue Nguyen, 562278da Daniël Alblas
@@ -104,7 +105,7 @@ public class Main {
             }
         }
 
-        ChargingVRP model2 = new ChargingVRP(distance_matrix, maximum_charge, time_limit, 20, 6, null, null);
+        ChargingVRP model2 = new ChargingVRP(distance_matrix, maximum_charge, time_limit, 20, 6, new ArrayList<>(), new ArrayList<>());
         model2.solveModel();
     }
 }

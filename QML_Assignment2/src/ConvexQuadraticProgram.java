@@ -46,7 +46,7 @@ public class ConvexQuadraticProgram {
                 LHS1 = cplex.sum(LHS1, xi[i-1]);
             }
             double RHS1 = 0;
-            for (int i = 0; i <= j-1 ; i++) {
+            for (int i = 0; i < j-1 ; i++) {
                 RHS1 += zeta_vector.get(i);
             }
             cplex.addLe(LHS1, RHS1);
@@ -59,7 +59,7 @@ public class ConvexQuadraticProgram {
                 LHS2 = cplex.sum(LHS2, xi[i-1]);
             }
             double RHS2 = -Q;
-            for (int i = 0; i <= j ; i++) {
+            for (int i = 0; i < j ; i++) {
                 RHS2 += zeta_vector.get(i);
             }
             cplex.addLe(LHS2, RHS2);
