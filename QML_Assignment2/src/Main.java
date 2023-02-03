@@ -8,8 +8,7 @@ import java.io.*;
  */
 public class Main {
     public static void main(String[] args) throws IloException {
-        Try m = new Try();
-
+//        Try m = new Try();
         int[][] coordinate_matrix = new int[2][22];
         coordinate_matrix[0][0] = 0;
         coordinate_matrix[1][0] = 0;
