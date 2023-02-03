@@ -3,32 +3,39 @@ import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
+import java.util.ArrayList;
+
 public class ConvexQuadraticProgram {
     private IloCplex cplex;
-    private IloNumVar[] epsilon;
-    private double[] zeta;
+    private IloNumVar[] xi;
+    private ArrayList<Double> zeta_vector;
+    private ArrayList<Double> tau_vector;
+
     private int p;
     private double Q;
+    private double T;
 
-    public ConvexQuadraticProgram(double[] chargeUsed, int numStations, double maxCharge) throws IloException {
+    public ConvexQuadraticProgram(ArrayList<Double> chargeUsed, double maxCharge, ArrayList<Double> timeElapsed, double maxTime) throws IloException {
         // Initialize the cplex solver
         cplex = new IloCplex();
 
-        p = numStations;
-        zeta = chargeUsed; // NOTE THAT zeta[0] AND zeta[p+1] NEED TO BE INITIALIZED EITHER HERE OR IN THE MAIN CLASS
+        zeta_vector = chargeUsed; // NOTE THAT zeta[0] AND zeta[p+1] NEED TO BE INITIALIZED EITHER HERE OR IN THE MAIN CLASS
+        tau_vector = timeElapsed; // NOTE THAT zeta[0] AND zeta[p+1] NEED TO BE INITIALIZED EITHER HERE OR IN THE MAIN CLASS
+        p = zeta_vector.size();
         Q = maxCharge;
+        T = maxTime;
 
-        epsilon = new IloNumVar[p+2]; // 0 and p+1 are the depot
-        for (int i = 0; i < p+2; i++) {
-            epsilon[i] = cplex.numVar(0, Double.POSITIVE_INFINITY);
+        xi = new IloNumVar[p]; // 0 and p+1 are the depot
+        for (int i = 0; i < p; i++) {
+            xi[i] = cplex.numVar(0, Double.POSITIVE_INFINITY);
         }
     }
 
-    public void solveModel() throws IloException {
+    public boolean routeIsFeasible() throws IloException {
         // Create the objective function
         IloNumExpr obj = cplex.constant(0);
         for (int i = 1; i <= p; i++) {
-            obj = cplex.sum(obj, cplex.prod(epsilon[i], epsilon[i]));
+            obj = cplex.sum(obj, cplex.prod(xi[i-1], xi[i-1]));
         }
         cplex.addMinimize(obj);
 
@@ -36,11 +43,11 @@ public class ConvexQuadraticProgram {
         for (int j = 1; j <= p; j++) {
             IloNumExpr LHS1 = cplex.constant(0);
             for (int i = 1; i <= j; i++) {
-                LHS1 = cplex.sum(LHS1, epsilon[i]);
+                LHS1 = cplex.sum(LHS1, xi[i-1]);
             }
             double RHS1 = 0;
             for (int i = 0; i <= j-1 ; i++) {
-                RHS1 += zeta[i];
+                RHS1 += zeta_vector.get(i);
             }
             cplex.addLe(LHS1, RHS1);
         }
@@ -49,15 +56,34 @@ public class ConvexQuadraticProgram {
         for (int j = 1; j <= p; j++) {
             IloNumExpr LHS2 = cplex.constant(0);
             for (int i = 1; i <= j; i++) {
-                LHS2 = cplex.sum(LHS2, epsilon[i]);
+                LHS2 = cplex.sum(LHS2, xi[i-1]);
             }
             double RHS2 = -Q;
             for (int i = 0; i <= j ; i++) {
-                RHS2 += zeta[i];
+                RHS2 += zeta_vector.get(i);
             }
             cplex.addLe(LHS2, RHS2);
         }
 
-        // MIGHT NEED TO ADD CONSTRAINTS FOR epsilon[0] AND epsilon[p+1]
+        cplex.setOut(null);
+        cplex.solve();
+
+        // Query the solution
+        if (cplex.getStatus() == IloCplex.Status.Optimal) {
+            double LHS = 0;
+            for (int i = 0; i <= p; i++) {
+                LHS += tau_vector.get(i);
+            }
+            for (int i = 1; i <= p; i++) {
+                double temp_xi = cplex.getValue(xi[i-1]);
+                LHS += temp_xi*temp_xi/100;
+            }
+            if(LHS > T) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+        return false;
     }
 }

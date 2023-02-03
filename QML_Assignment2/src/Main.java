@@ -50,9 +50,9 @@ public class Main {
         double maximum_charge = 50;
         double time_limit = 235;
 
-        // Initialize and solve for the exercise 1
-        VRP model = new VRP(distance_matrix, maximum_charge, time_limit);
-        model.solveModel();
+//        // Initialize and solve for the exercise 1
+//        VRP model = new VRP(distance_matrix, maximum_charge, time_limit);
+//        model.solveModel();
 
         int[][] coordinate_matrix_temp = new int[2][6];
         int[][] coordinate_matrix2 = new int[2][28];
@@ -104,7 +104,7 @@ public class Main {
             }
         }
 
-        InstFullCharging model2 = new InstFullCharging(distance_matrix, maximum_charge, time_limit, 20, 6);
+        ChargingVRP model2 = new ChargingVRP(distance_matrix, maximum_charge, time_limit, 20, 6, null, null);
         model2.solveModel();
     }
 }
