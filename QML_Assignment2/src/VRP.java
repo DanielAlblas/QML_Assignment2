@@ -34,13 +34,13 @@ public class VRP {
         rho_vector = new IloNumVar[nLocations];
         tau_vector = new IloNumVar[nLocations];
 
-        //TODO: might be able to use nLocations-1 in the loops instead of below line 47
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 z_matrix[i][j] = cplex.boolVar("Arc (" + i + "," + j + ")");
             }
         }
 
+        // Calculate costs, required charge, and time, between locations
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 c_matrix[i][j] = 1 + d_matrix[i][j];
@@ -49,18 +49,10 @@ public class VRP {
             }
         }
 
-        q_matrix[0][nLocations - 1] = 0;
-        t_matrix[0][nLocations - 1] = 0;
-        q_matrix[nLocations - 1][0] = 0;
-        t_matrix[nLocations - 1][0] = 0;
-
         for (int i = 0; i < nLocations; i++) {
             rho_vector[i] = cplex.numVar(0, Q);
             tau_vector[i] = cplex.numVar(0, T);
         }
-
-        c_matrix[0][nLocations - 1] = 0;
-        c_matrix[nLocations - 1][0] = 0;
     }
 
     public void solveModel() throws IloException {
@@ -73,19 +65,14 @@ public class VRP {
         }
         cplex.addMinimize(obj);
 
-        // set elapsed time and used charge to 0 for the start
-        cplex.addEq(rho_vector[0], 0);
-        cplex.addEq(tau_vector[0], 0);
-
-        // set travel from i to i to zero, as well as 0 to nLocations-1
-
+        // Disallows travel to and form the same location
         for (int i = 0; i < nLocations; i++) {
             cplex.addEq(z_matrix[i][i], 0);
         }
-        cplex.addEq(z_matrix[0][nLocations-1], 0);
+        cplex.addEq(z_matrix[0][nLocations - 1], 0);
 
-        // 2.2
-        for (int i = 1; i < nLocations-1; i++) {
+        // Visit constraints (1b)
+        for (int i = 1; i < nLocations - 1; i++) {
             IloNumExpr LHS2 = cplex.constant(0);
             for (int j = 1; j < nLocations; j++) {
                 if (j != i) {
@@ -95,10 +82,10 @@ public class VRP {
             cplex.addEq(LHS2, 1);
         }
 
-        // 2.3.2
-        for (int k = 1; k < nLocations-1; k++) {
+        // Depart constraints (1c)
+        for (int k = 1; k < nLocations - 1; k++) {
             IloNumExpr LHS3 = cplex.constant(0);
-            for (int i = 0; i < nLocations-1; i++) {
+            for (int i = 0; i < nLocations - 1; i++) {
                 if (i != k) {
                     LHS3 = cplex.sum(LHS3, z_matrix[i][k]);
                 }
@@ -106,7 +93,7 @@ public class VRP {
             cplex.addEq(LHS3, 1);
         }
 
-        // 2.5
+        // Time and charge constraints to disallow subtours (1d & 1f)
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 if (i != j) {
@@ -121,17 +108,12 @@ public class VRP {
             }
         }
 
-        // 2.6 (kinda)
-        for (int j = 1; j < nLocations-1; j++) {
+        // Constraint to limit time and charge (1e & 1g)
+        for (int j = 1; j < nLocations - 1; j++) {
             cplex.addLe(t_matrix[0][j], tau_vector[j]);
-            cplex.addLe(tau_vector[j], T - t_matrix[j][0]);
+            cplex.addLe(tau_vector[j], T - t_matrix[j][nLocations - 1]);
             cplex.addLe(q_matrix[0][j], rho_vector[j]);
-            cplex.addLe(rho_vector[j], Q - q_matrix[j][0]);
-        }
-
-        // Decision variables constraints
-        for (int i = 0; i < nLocations; i++) {
-            cplex.addEq(z_matrix[i][i], 0);
+            cplex.addLe(rho_vector[j], Q - q_matrix[j][nLocations - 1]);
         }
 
         cplex.setOut(null);

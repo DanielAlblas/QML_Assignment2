@@ -41,13 +41,13 @@ public class InstFullCharging {
         zeta_vector = new IloNumVar[nLocations];
         tau_vector = new IloNumVar[nLocations];
 
-        //TODO: might be able to use nLocations-1 in the loops instead of below line 47
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 z_matrix[i][j] = cplex.boolVar("Arc (" + i + "," + j + ")");
             }
         }
 
+        // Calculate costs, required charge, and time, between locations
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 c_matrix[i][j] = 1 + d_matrix[i][j];
@@ -56,18 +56,10 @@ public class InstFullCharging {
             }
         }
 
-        q_matrix[0][nLocations - 1] = 0;
-        t_matrix[0][nLocations - 1] = 0;
-        q_matrix[nLocations - 1][0] = 0;
-        t_matrix[nLocations - 1][0] = 0;
-
         for (int i = 0; i < nLocations; i++) {
-            zeta_vector[i] = cplex.numVar(0, 2000);
+            zeta_vector[i] = cplex.numVar(0, Q);
             tau_vector[i] = cplex.numVar(0, T);
         }
-
-        c_matrix[0][nLocations - 1] = 0;
-        c_matrix[nLocations - 1][0] = 0;
     }
 
     public void solveModel() throws IloException {
@@ -80,17 +72,13 @@ public class InstFullCharging {
         }
         cplex.addMinimize(obj);
 
-        // set elapsed time to 0 and remaining charge to Q for the start
-        cplex.addEq(zeta_vector[0], Q);
-        cplex.addEq(tau_vector[0], 0);
-
-        // set travel from i to i to zero, as well as 0 to nLocations-1
+        // Disallows travel to and form the same location
         for (int i = 0; i < nLocations; i++) {
             cplex.addEq(z_matrix[i][i], 0);
         }
         cplex.addEq(z_matrix[0][nLocations - 1], 0);
 
-        // 2b
+        // Visit constraints for buyers (2b)
         for (int i = 1; i <= nV; i++) {
             IloNumExpr LHS2b = cplex.constant(0);
             for (int j = 1; j < nLocations; j++) {
@@ -101,7 +89,7 @@ public class InstFullCharging {
             cplex.addEq(LHS2b, 1);
         }
 
-        // 2c
+        // Visit constraints for charging stations (2c)
         for (int i = nV + 1; i <= nV + nC; i++) {
             IloNumExpr LHS2c = cplex.constant(0);
             for (int j = 1; j < nLocations; j++) {
@@ -112,7 +100,7 @@ public class InstFullCharging {
             cplex.addLe(LHS2c, 1);
         }
 
-        // 2d
+        // Constraints to ensure same route (2d)
         for (int k = 1; k <= nV + nC; k++) {
             IloNumExpr LHS2d = cplex.constant(0);
             for (int i = 0; i <= nV + nC; i++) {
@@ -129,15 +117,24 @@ public class InstFullCharging {
             cplex.addEq(LHS2d, 0);
         }
 
-        // 2.5
+        // Time constraints to disallow subtours (2e)
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
-                IloNumExpr RHS_time = cplex.diff(cplex.sum(tau_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
-                        cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
-                cplex.addGe(tau_vector[j], RHS_time);
+                if (i != j) {
+                    IloNumExpr RHS_time = cplex.diff(cplex.sum(tau_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
+                            cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
+                    cplex.addGe(tau_vector[j], RHS_time);
+                }
             }
         }
 
+        // Constraints to limit time (2f)
+        for (int j = 1; j < nLocations - 1; j++) {
+            cplex.addLe(t_matrix[0][j], tau_vector[j]);
+            cplex.addLe(tau_vector[j], T - t_matrix[j][nLocations - 1]);
+        }
+
+        // Charge constraints to disallow subtours (2g)
         for (int i = 0; i < nLocations; i++) {
             for (int j = 1; j <= nV; j++) {
                 if (i != j) {
@@ -148,43 +145,18 @@ public class InstFullCharging {
             }
         }
 
-        // 2.6 (kinda)
-        for (int j = 1; j < nLocations - 1; j++) {
-            cplex.addLe(t_matrix[0][j], tau_vector[j]);
-            cplex.addLe(tau_vector[j], T - t_matrix[j][0]);
+        // Constraints to limit charge (2h)
+        for (int j = 1; j <= nV; j++) {
+            for (int k = nV + 1; k <= nV + nC; k++) {
+                cplex.addGe(zeta_vector[j], Math.min(q_matrix[j][nLocations - 1], q_matrix[j][k] + q_matrix[k][nLocations - 1]));
+            }
         }
 
-
+        // Constraints to recharge and leave depot with full charge (2i)
         for (int j = nV + 1; j <= nV + nC; j++) {
             cplex.addEq(zeta_vector[j], Q);
         }
-
-        //works but i want to try another method
-        for (int i = nV + 1; i <= nV + nC; i++) {
-            for (int j = 1; j <= nV; j++) {
-                cplex.addGe(zeta_vector[j], Math.min(q_matrix[j][nLocations-1], q_matrix[j][i] + q_matrix[i][nLocations-1]));
-            }
-        }
-
-//        for (int i = 1; i < nV; i++) {
-//            for (int j = nV + 1; j < nLocations; j++) {
-//                if (i != j) {
-//                    cplex.addGe(q_vector[j], cplex.diff(Q, cplex.prod(q_matrix[i][j], z_matrix[i][j])));
-//                }
-//            }
-//        }
-
-
-        // Decision variables constraints
-        for (int i = 0; i < nLocations; i++) {
-            cplex.addEq(z_matrix[i][i], 0);
-        }
-
-        for (int i = 0; i < nLocations; i++) {
-            for (int k = nV + 1; k < nV + nC + 1; k++) {
-                cplex.addLe(zeta_vector[i], cplex.sum(cplex.prod(Q, cplex.diff(1, z_matrix[k][i])), q_matrix[k][i]));
-            }
-        }
+        cplex.addEq(zeta_vector[0], Q);
 
         cplex.setOut(null);
         cplex.solve();
