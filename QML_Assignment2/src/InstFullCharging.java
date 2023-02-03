@@ -18,8 +18,8 @@ public class InstFullCharging {
     private double T;
     private IloCplex cplex;
     private IloNumVar[][] z_matrix;
-    private IloNumVar[] q_vector;
-    private IloNumVar[] t_vector;
+    private IloNumVar[] zeta_vector;
+    private IloNumVar[] tau_vector;
 
     public InstFullCharging(double[][] distances, double maxElectricity, double maxTime, int numLocations, int numChargeStations) throws IloException {
         // Initialize the cplex solver
@@ -38,8 +38,8 @@ public class InstFullCharging {
 
         // Creating the decision variables: matrix x and vector y
         z_matrix = new IloNumVar[nLocations][nLocations];
-        q_vector = new IloNumVar[nLocations];
-        t_vector = new IloNumVar[nLocations];
+        zeta_vector = new IloNumVar[nLocations];
+        tau_vector = new IloNumVar[nLocations];
 
         //TODO: might be able to use nLocations-1 in the loops instead of below line 47
         for (int i = 0; i < nLocations; i++) {
@@ -62,8 +62,8 @@ public class InstFullCharging {
         t_matrix[nLocations - 1][0] = 0;
 
         for (int i = 0; i < nLocations; i++) {
-            q_vector[i] = cplex.numVar(0, 2000);
-            t_vector[i] = cplex.numVar(0, T);
+            zeta_vector[i] = cplex.numVar(0, 2000);
+            tau_vector[i] = cplex.numVar(0, T);
         }
 
         c_matrix[0][nLocations - 1] = 0;
@@ -81,8 +81,8 @@ public class InstFullCharging {
         cplex.addMinimize(obj);
 
         // set elapsed time to 0 and remaining charge to Q for the start
-        cplex.addEq(q_vector[0], Q);
-        cplex.addEq(t_vector[0], 0);
+        cplex.addEq(zeta_vector[0], Q);
+        cplex.addEq(tau_vector[0], 0);
 
         // set travel from i to i to zero, as well as 0 to nLocations-1
         for (int i = 0; i < nLocations; i++) {
@@ -132,37 +132,37 @@ public class InstFullCharging {
         // 2.5
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
-                IloNumExpr RHS_time = cplex.diff(cplex.sum(t_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
+                IloNumExpr RHS_time = cplex.diff(cplex.sum(tau_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
                         cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
-                cplex.addGe(t_vector[j], RHS_time);
+                cplex.addGe(tau_vector[j], RHS_time);
             }
         }
 
         for (int i = 0; i < nLocations; i++) {
             for (int j = 1; j <= nV; j++) {
                 if (i != j) {
-                    IloNumExpr RHS_charge = cplex.sum(cplex.diff(q_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
+                    IloNumExpr RHS_charge = cplex.sum(cplex.diff(zeta_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
                             cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
-                    cplex.addLe(q_vector[j], RHS_charge);
+                    cplex.addLe(zeta_vector[j], RHS_charge);
                 }
             }
         }
 
         // 2.6 (kinda)
         for (int j = 1; j < nLocations - 1; j++) {
-            cplex.addLe(t_matrix[0][j], t_vector[j]);
-            cplex.addLe(t_vector[j], T - t_matrix[j][0]);
+            cplex.addLe(t_matrix[0][j], tau_vector[j]);
+            cplex.addLe(tau_vector[j], T - t_matrix[j][0]);
         }
 
 
         for (int j = nV + 1; j <= nV + nC; j++) {
-            cplex.addEq(q_vector[j], Q);
+            cplex.addEq(zeta_vector[j], Q);
         }
 
         //works but i want to try another method
         for (int i = nV + 1; i <= nV + nC; i++) {
             for (int j = 1; j <= nV; j++) {
-                cplex.addGe(q_vector[j], Math.min(q_matrix[j][nLocations-1], q_matrix[j][i] + q_matrix[i][nLocations-1]));
+                cplex.addGe(zeta_vector[j], Math.min(q_matrix[j][nLocations-1], q_matrix[j][i] + q_matrix[i][nLocations-1]));
             }
         }
 
@@ -182,7 +182,7 @@ public class InstFullCharging {
 
         for (int i = 0; i < nLocations; i++) {
             for (int k = nV + 1; k < nV + nC + 1; k++) {
-                cplex.addLe(q_vector[i], cplex.sum(cplex.prod(Q, cplex.diff(1, z_matrix[k][i])), q_matrix[k][i]));
+                cplex.addLe(zeta_vector[i], cplex.sum(cplex.prod(Q, cplex.diff(1, z_matrix[k][i])), q_matrix[k][i]));
             }
         }
 
