@@ -71,7 +71,7 @@ public class ConvexQuadraticProgram {
         // Query the solution
         if (cplex.getStatus() == IloCplex.Status.Optimal) {
             double LHS = 0;
-            for (int i = 0; i <= p; i++) {
+            for (int i = 0; i < p; i++) {
                 LHS += tau_vector.get(i);
             }
             for (int i = 1; i <= p; i++) {
