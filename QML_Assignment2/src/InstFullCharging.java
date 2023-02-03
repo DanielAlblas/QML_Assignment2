@@ -136,7 +136,7 @@ public class InstFullCharging {
 
         // Charge constraints to disallow subtours (2g)
         for (int i = 0; i < nLocations; i++) {
-            for (int j = 1; j <= nV; j++) {
+            for (int j = 0; j <= nV; j++) {
                 if (i != j) {
                     IloNumExpr RHS_charge = cplex.sum(cplex.diff(zeta_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
                             cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
