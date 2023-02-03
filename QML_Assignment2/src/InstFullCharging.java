@@ -147,10 +147,19 @@ public class InstFullCharging {
 
         // Constraints to limit charge (2h)
         for (int j = 1; j <= nV; j++) {
+            double minimum = q_matrix[j][nLocations - 1];
             for (int k = nV + 1; k <= nV + nC; k++) {
-                cplex.addGe(zeta_vector[j], Math.min(q_matrix[j][nLocations - 1], q_matrix[j][k] + q_matrix[k][nLocations - 1]));
+                minimum = Math.min(minimum, q_matrix[j][k] + q_matrix[k][nLocations - 1]);
             }
+            cplex.addGe(zeta_vector[j], minimum);
         }
+
+//        // Constraints to limit time (2f)
+//        for (int j = 1; j < nLocations - 1; j++) {
+//            cplex.addLe(q_matrix[j][nLocations-1], zeta_vector[j]);
+////            cplex.addLe(zeta_vector[j], Q - q_matrix[j][nLocations - 1]);
+//        }
+
 
         // Constraints to recharge and leave depot with full charge (2i)
         for (int j = nV + 1; j <= nV + nC; j++) {

@@ -49,8 +49,8 @@ public class Try {
         double[][] distance_matrix = new double[22][22];
         for (int i = 0; i < 22; i++) {
             for (int j = 0; j < 22; j++) {
-                distance_matrix[i][j] = Math.sqrt(Math.pow((coordinate_matrix[0][i] - coordinate_matrix[0][j]),2) +
-                        Math.pow((coordinate_matrix[1][i] - coordinate_matrix[1][j]),2));
+                distance_matrix[i][j] = Math.sqrt(Math.pow((coordinate_matrix[0][i] - coordinate_matrix[0][j]), 2) +
+                        Math.pow((coordinate_matrix[1][i] - coordinate_matrix[1][j]), 2));
             }
         }
 
@@ -85,14 +85,14 @@ public class Try {
         }
 
         for (int i = 0; i < coordinate_matrix.length; i++) {
-            for (int j = 0; j < coordinate_matrix[0].length-1; j++) {
+            for (int j = 0; j < coordinate_matrix[0].length - 1; j++) {
                 coordinate_matrix2[i][j] = coordinate_matrix[i][j];
             }
         }
 
         for (int i = 0; i < coordinate_matrix_temp.length; i++) {
             for (int j = 0; j < coordinate_matrix_temp[0].length; j++) {
-                coordinate_matrix2[i][j+21] = coordinate_matrix_temp[i][j];
+                coordinate_matrix2[i][j + 21] = coordinate_matrix_temp[i][j];
             }
         }
 
@@ -104,8 +104,8 @@ public class Try {
         distance_matrix = new double[28][28];
         for (int i = 0; i < 28; i++) {
             for (int j = 0; j < 28; j++) {
-                distance_matrix[i][j] = Math.sqrt(Math.pow((coordinate_matrix2[0][i] - coordinate_matrix2[0][j]),2) +
-                        Math.pow((coordinate_matrix2[1][i] - coordinate_matrix2[1][j]),2));
+                distance_matrix[i][j] = Math.sqrt(Math.pow((coordinate_matrix2[0][i] - coordinate_matrix2[0][j]), 2) +
+                        Math.pow((coordinate_matrix2[1][i] - coordinate_matrix2[1][j]), 2));
             }
         }
 
@@ -141,41 +141,12 @@ public class Try {
 
         c_matrix[0][nLocations - 1] = 0;
         c_matrix[nLocations - 1][0] = 0;
-    }
 
-    public double totalCost(int[] route) {
-        double cost = 0;
-        for (int i = 0; i < route.length-1; i++) {
-            cost += c_matrix[route[i]][route[i+1]];
-        }
-        return cost;
-    }
 
-    public double totalTime(int[] route) {
-        double time = 0;
-        for (int i = 0; i < route.length-1; i++) {
-            time += t_matrix[route[i]][route[i+1]];
-        }
-        return time;
-    }
-
-    public void totalCharge(int[] route) {
-        double charge = 0;
-        for (int i = 0; i < route.length-1; i++) {
-            charge += q_matrix[route[i]][route[i+1]];
-            if (route[i] >= 21 && route[i] <= 26) {
-                System.out.println("Charged used from depot/last station up to station " + (route[i]-20) + ": " + charge);
-                charge = 0;
-            }
-        }
-    }
-
-    public void Main(String[] args) {
-        Main m = new Main();
-
-        int[] route1 = new int[] {0, 1, 4, 21, 17, 5, 2, 25, 12, 19, 26, 8, 24, 11, 16, 10, 23, 14, 15, 27};
-        int[] route2 = new int[] {0, 6, 7, 13, 22, 9, 18, 27};
-        int[] route3 = new int[] {0, 20, 3, 27};
+        int[] route1 = new int[]{0, 1, 4, 21, 17, 5, 2, 25, 12, 19, 26, 8, 24, 11, 16, 10, 23, 14, 15, 27};
+        int[] route2 = new int[]{0, 6, 7, 13, 22, 9, 18, 27};
+        int[] route3 = new int[]{0, 20, 3, 27};
+        int[] route4 = new int[]{0, 18, 1, 4, 21, 17, 5, 2, 12, 25, 3, 19, 8, 26, 11, 10, 16, 14, 23, 15, 13, 9, 22, 7, 6, 20, 27};
 
         System.out.println("Route 1");
         System.out.println("Cost: " + totalCost(route1));
@@ -191,6 +162,38 @@ public class Try {
         System.out.println("Cost: " + totalCost(route3));
         System.out.println("Time: " + totalTime(route3));
         totalCharge(route3);
+
+        System.out.println("Route 4");
+        System.out.println("Cost: " + totalCost(route4));
+        System.out.println("Time: " + totalTime(route4));
+        totalCharge(route4);
+}
+
+    public double totalCost(int[] route) {
+        double cost = 0;
+        for (int i = 0; i < route.length - 1; i++) {
+            cost += c_matrix[route[i]][route[i + 1]];
+        }
+        return cost;
+    }
+
+    public double totalTime(int[] route) {
+        double time = 0;
+        for (int i = 0; i < route.length - 1; i++) {
+            time += t_matrix[route[i]][route[i + 1]];
+        }
+        return time;
+    }
+
+    public void totalCharge(int[] route) {
+        double charge = 0;
+        for (int i = 0; i < route.length - 1; i++) {
+            charge += q_matrix[route[i]][route[i + 1]];
+            if (route[i+1] >= 21 && route[i+1] <= 26) {
+                System.out.println("Charged used from depot/last station up to station " + (route[i+1] - 20) + ": " + charge);
+                charge = 0;
+            }
+        }
     }
 
 //    public static void main(String[] args) throws IloException {
