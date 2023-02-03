@@ -220,7 +220,7 @@ public class ChargingVRP {
                         }
                     }
                 }
-                System.out.println("cuts: " + (cuts - 1));
+                System.out.println("cuts: " + cuts);
                 if (cuts != 0) {
                     for (int i = 0; i < LHS_cuts.size(); i++) {
                         cplex.addLe(LHS_cuts.get(i), RHS_cuts.get(i));
