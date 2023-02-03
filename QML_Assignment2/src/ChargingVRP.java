@@ -23,7 +23,7 @@ public class ChargingVRP {
     private IloNumVar[] eta_vector;
     private IloNumVar[] psi_vector;
 
-    public ChargingVRP(double[][] distances, double maxElectricity, double maxTime, int numLocations, int numChargeStations, ArrayList<IloNumExpr> LHS_cut, ArrayList<Integer> RHS_cut) throws IloException {
+    public ChargingVRP(double[][] distances, double maxElectricity, double maxTime, int numLocations, int numChargeStations, ArrayList<IloNumExpr> LHS_cuts_new, ArrayList<Integer> RHS_cuts_new) throws IloException {
         // Initialize the cplex solver
         cplex = new IloCplex();
 
@@ -33,8 +33,8 @@ public class ChargingVRP {
         T = maxTime;
         nV = numLocations;
         nC = numChargeStations;
-        LHS_cut = LHS_cut;
-        RHS_cut = RHS_cut;
+        LHS_cuts = LHS_cuts_new;
+        RHS_cuts = RHS_cuts_new;
 
         c_matrix = new double[nLocations][nLocations];
         q_matrix = new double[nLocations][nLocations];
