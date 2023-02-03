@@ -195,7 +195,7 @@ public class ChargingVRP {
                             route.add(from);
                             charge += q_matrix[from][to];
                             time += t_matrix[from][to];
-                            if (to >= 21 && to <= 26) {
+                            if (to >= 21 && to <= 27) {
                                 zeta_vector.add(charge);
                                 charge = 0;
                                 tau_vector.add(time);
@@ -208,6 +208,7 @@ public class ChargingVRP {
                             to++;
                         }
                     }
+                    route.add(from);
                     ConvexQuadraticProgram step2 = new ConvexQuadraticProgram(zeta_vector, Q, tau_vector, T);
                     if (!step2.routeIsFeasible()) {
                         cuts++;
@@ -227,6 +228,7 @@ public class ChargingVRP {
                     }
                 }
             }
+            System.out.println("cuts: " + cuts);
             if (cuts > 0) {
                 ChargingVRP model = new ChargingVRP(d_matrix, Q, T, nV, nC, LHS_cuts_new, RHS_cuts_new);
                 model.solveModel();

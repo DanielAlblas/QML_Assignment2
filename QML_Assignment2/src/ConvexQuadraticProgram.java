@@ -21,12 +21,14 @@ public class ConvexQuadraticProgram {
 
         zeta_vector = chargeUsed; // NOTE THAT zeta[0] AND zeta[p+1] NEED TO BE INITIALIZED EITHER HERE OR IN THE MAIN CLASS
         tau_vector = timeElapsed; // NOTE THAT zeta[0] AND zeta[p+1] NEED TO BE INITIALIZED EITHER HERE OR IN THE MAIN CLASS
-        p = zeta_vector.size();
+        p = zeta_vector.size() - 1;
         Q = maxCharge;
         T = maxTime;
+        zeta_vector.add(0.0);
+        tau_vector.add(0.0);
 
-        xi = new IloNumVar[p]; // 0 and p+1 are the depot
-        for (int i = 0; i < p; i++) {
+        xi = new IloNumVar[p + 2]; // 0 and p+1 are the depot
+        for (int i = 1; i <= p; i++) {
             xi[i] = cplex.numVar(0, Double.POSITIVE_INFINITY);
         }
     }
@@ -35,7 +37,7 @@ public class ConvexQuadraticProgram {
         // Create the objective function
         IloNumExpr obj = cplex.constant(0);
         for (int i = 1; i <= p; i++) {
-            obj = cplex.sum(obj, cplex.prod(xi[i-1], xi[i-1]));
+            obj = cplex.sum(obj, cplex.prod(xi[i], xi[i]));
         }
         cplex.addMinimize(obj);
 
@@ -43,10 +45,10 @@ public class ConvexQuadraticProgram {
         for (int j = 1; j <= p; j++) {
             IloNumExpr LHS1 = cplex.constant(0);
             for (int i = 1; i <= j; i++) {
-                LHS1 = cplex.sum(LHS1, xi[i-1]);
+                LHS1 = cplex.sum(LHS1, xi[i]);
             }
             double RHS1 = 0;
-            for (int i = 0; i < j-1 ; i++) {
+            for (int i = 0; i <= j - 1; i++) {
                 RHS1 += zeta_vector.get(i);
             }
             cplex.addLe(LHS1, RHS1);
@@ -56,10 +58,10 @@ public class ConvexQuadraticProgram {
         for (int j = 1; j <= p; j++) {
             IloNumExpr LHS2 = cplex.constant(0);
             for (int i = 1; i <= j; i++) {
-                LHS2 = cplex.sum(LHS2, xi[i-1]);
+                LHS2 = cplex.sum(LHS2, xi[i]);
             }
             double RHS2 = -Q;
-            for (int i = 0; i < j ; i++) {
+            for (int i = 0; i <= j; i++) {
                 RHS2 += zeta_vector.get(i);
             }
             cplex.addLe(LHS2, RHS2);
@@ -71,14 +73,15 @@ public class ConvexQuadraticProgram {
         // Query the solution
         if (cplex.getStatus() == IloCplex.Status.Optimal) {
             double LHS = 0;
-            for (int i = 0; i < p; i++) {
+            for (int i = 0; i <= p; i++) {
                 LHS += tau_vector.get(i);
             }
             for (int i = 1; i <= p; i++) {
-                double temp_xi = cplex.getValue(xi[i-1]);
-                LHS += temp_xi*temp_xi/100;
+                double temp_xi = cplex.getValue(xi[i]);
+                LHS += temp_xi * temp_xi / 100;
             }
-            if(LHS > T) {
+            System.out.println("LHS: " + LHS);
+            if (LHS > T) {
                 return false;
             } else {
                 return true;
