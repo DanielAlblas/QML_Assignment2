@@ -48,7 +48,7 @@ public class VRP {
                 t_matrix[i][j] = 5 + Math.pow(d_matrix[i][j], 0.9);
             }
         }
-        
+
         q_matrix[0][nLocations - 1] = 0;
         t_matrix[0][nLocations - 1] = 0;
         q_matrix[nLocations - 1][0] = 0;
@@ -58,7 +58,7 @@ public class VRP {
             q_vector[i] = cplex.numVar(0, Q);
             t_vector[i] = cplex.numVar(0, T);
         }
-        
+
         c_matrix[0][nLocations - 1] = 0;
         c_matrix[nLocations - 1][0] = 0;
     }
@@ -72,6 +72,17 @@ public class VRP {
             }
         }
         cplex.addMinimize(obj);
+
+        // set elapsed time and used charge to 0 for the start
+        cplex.addEq(q_vector[0], 0);
+        cplex.addEq(t_vector[0], 0);
+
+        // set travel from i to i to zero, as well as 0 to nLocations-1
+
+        for (int i = 0; i < nLocations; i++) {
+            cplex.addEq(z_matrix[i][i], 0);
+        }
+        cplex.addEq(z_matrix[0][nLocations-1], 0);
 
         // 2.2
         for (int i = 1; i < nLocations-1; i++) {
@@ -120,32 +131,34 @@ public class VRP {
 //            cplex.addEq(LHS4, 1);
         }
 
-
-        // 2.4
-//        IloNumExpr LHS4 = cplex.constant(0);
-//        for (int j = 1; j < nLocations-1; j++) {
-//            LHS4 = cplex.sum(LHS4, z_matrix[0][j]);
-//        }
-//        cplex.addGe(LHS4, 0);
-
         // 2.5
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
-                IloNumExpr RHS_time = cplex.diff(cplex.sum(t_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
-                                             cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
-                cplex.addGe(t_vector[j], RHS_time);
+                if (i != j) {
+                    IloNumExpr RHS_time = cplex.diff(cplex.sum(t_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
+                            cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
+                    cplex.addGe(t_vector[j], RHS_time);
 
-                IloNumExpr RHS_charge = cplex.diff(cplex.sum(q_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
-                        cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
-                cplex.addGe(q_vector[j], RHS_charge);
+                    IloNumExpr RHS_charge = cplex.diff(cplex.sum(q_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
+                            cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
+                    cplex.addGe(q_vector[j], RHS_charge);
+                }
             }
         }
-        
+
+        // 2.6 (kinda)
+        for (int j = 1; j < nLocations-1; j++) {
+            cplex.addLe(t_matrix[0][j], t_vector[j]);
+            cplex.addLe(t_vector[j], T - t_matrix[j][0]);
+            cplex.addLe(q_matrix[0][j], q_vector[j]);
+            cplex.addLe(q_vector[j], Q - q_matrix[j][0]);
+        }
+
         // Decision variables constraints
         for (int i = 0; i < nLocations; i++) {
             cplex.addEq(z_matrix[i][i], 0);
         }
-        
+
         cplex.setOut(null);
         cplex.solve();
 
