@@ -230,6 +230,8 @@ public class ChargingVRP {
             }
             System.out.println("cuts: " + cuts);
             if (cuts > 0) {
+                // Close the model
+                cplex.close();
                 ChargingVRP model = new ChargingVRP(d_matrix, Q, T, nV, nC, LHS_cuts_new, RHS_cuts_new);
                 model.solveModel();
             } else {
