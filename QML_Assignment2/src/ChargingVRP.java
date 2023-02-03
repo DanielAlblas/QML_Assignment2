@@ -169,12 +169,6 @@ public class ChargingVRP {
 
             // Query the solution
             if (cplex.getStatus() == IloCplex.Status.Optimal) {
-                ArrayList<IloNumExpr> LHS_cuts_new = new ArrayList<>();
-                ArrayList<Integer> RHS_cuts_new = new ArrayList<>();
-                if (LHS_cuts != null) {
-                    LHS_cuts_new.addAll(LHS_cuts);
-                    RHS_cuts_new.addAll(RHS_cuts);
-                }
                 for (int i = 0; i < nLocations; i++) {
                     if (cplex.getValue(z_matrix[0][i]) >= 0.5) {
                         int from = 0;
