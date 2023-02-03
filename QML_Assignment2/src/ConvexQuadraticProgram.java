@@ -64,7 +64,7 @@ public class ConvexQuadraticProgram {
             for (int i = 0; i <= j; i++) {
                 RHS2 += zeta_vector.get(i);
             }
-            cplex.addLe(LHS2, RHS2);
+            cplex.addGe(LHS2, RHS2);
         }
 
         cplex.setOut(null);
