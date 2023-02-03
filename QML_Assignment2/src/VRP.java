@@ -14,7 +14,7 @@ public class VRP {
     private IloCplex cplex;
     private IloNumVar[][] z_matrix;
     private IloNumVar[] rho_vector;
-    private IloNumVar[] tau_vector;
+    private IloNumVar[] psi_vector;
 
     public VRP(double[][] distances, double maxElectricity, double maxTime) throws IloException {
         // Initialize the cplex solver
@@ -32,7 +32,7 @@ public class VRP {
         // Creating the decision variables: matrix x and vector y
         z_matrix = new IloNumVar[nLocations][nLocations];
         rho_vector = new IloNumVar[nLocations];
-        tau_vector = new IloNumVar[nLocations];
+        psi_vector = new IloNumVar[nLocations];
 
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
@@ -51,7 +51,7 @@ public class VRP {
 
         for (int i = 0; i < nLocations; i++) {
             rho_vector[i] = cplex.numVar(0, Q);
-            tau_vector[i] = cplex.numVar(0, T);
+            psi_vector[i] = cplex.numVar(0, T);
         }
     }
 
@@ -97,9 +97,9 @@ public class VRP {
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 if (i != j) {
-                    IloNumExpr RHS_time = cplex.diff(cplex.sum(tau_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
+                    IloNumExpr RHS_time = cplex.diff(cplex.sum(psi_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
                             cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
-                    cplex.addGe(tau_vector[j], RHS_time);
+                    cplex.addGe(psi_vector[j], RHS_time);
 
                     IloNumExpr RHS_charge = cplex.diff(cplex.sum(rho_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
                             cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
@@ -110,8 +110,8 @@ public class VRP {
 
         // Constraint to limit time and charge (1e & 1g)
         for (int j = 1; j < nLocations - 1; j++) {
-            cplex.addLe(t_matrix[0][j], tau_vector[j]);
-            cplex.addLe(tau_vector[j], T - t_matrix[j][nLocations - 1]);
+            cplex.addLe(t_matrix[0][j], psi_vector[j]);
+            cplex.addLe(psi_vector[j], T - t_matrix[j][nLocations - 1]);
             cplex.addLe(q_matrix[0][j], rho_vector[j]);
             cplex.addLe(rho_vector[j], Q - q_matrix[j][nLocations - 1]);
         }

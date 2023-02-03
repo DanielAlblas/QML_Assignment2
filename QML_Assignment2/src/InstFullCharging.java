@@ -18,8 +18,8 @@ public class InstFullCharging {
     private double T;
     private IloCplex cplex;
     private IloNumVar[][] z_matrix;
-    private IloNumVar[] zeta_vector;
-    private IloNumVar[] tau_vector;
+    private IloNumVar[] eta_vector;
+    private IloNumVar[] psi_vector;
 
     public InstFullCharging(double[][] distances, double maxElectricity, double maxTime, int numLocations, int numChargeStations) throws IloException {
         // Initialize the cplex solver
@@ -38,8 +38,8 @@ public class InstFullCharging {
 
         // Creating the decision variables: matrix x and vector y
         z_matrix = new IloNumVar[nLocations][nLocations];
-        zeta_vector = new IloNumVar[nLocations];
-        tau_vector = new IloNumVar[nLocations];
+        eta_vector = new IloNumVar[nLocations];
+        psi_vector = new IloNumVar[nLocations];
 
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
@@ -57,8 +57,8 @@ public class InstFullCharging {
         }
 
         for (int i = 0; i < nLocations; i++) {
-            zeta_vector[i] = cplex.numVar(0, Q);
-            tau_vector[i] = cplex.numVar(0, T);
+            eta_vector[i] = cplex.numVar(0, Q);
+            psi_vector[i] = cplex.numVar(0, T);
         }
     }
 
@@ -121,26 +121,26 @@ public class InstFullCharging {
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 if (i != j) {
-                    IloNumExpr RHS_time = cplex.diff(cplex.sum(tau_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
+                    IloNumExpr RHS_time = cplex.diff(cplex.sum(psi_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
                             cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
-                    cplex.addGe(tau_vector[j], RHS_time);
+                    cplex.addGe(psi_vector[j], RHS_time);
                 }
             }
         }
 
         // Constraints to limit time (2f)
         for (int j = 1; j < nLocations - 1; j++) {
-            cplex.addLe(t_matrix[0][j], tau_vector[j]);
-            cplex.addLe(tau_vector[j], T - t_matrix[j][nLocations - 1]);
+            cplex.addLe(t_matrix[0][j], psi_vector[j]);
+            cplex.addLe(psi_vector[j], T - t_matrix[j][nLocations - 1]);
         }
 
         // Charge constraints to disallow subtours (2g)
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j <= nV; j++) {
                 if (i != j) {
-                    IloNumExpr RHS_charge = cplex.sum(cplex.diff(zeta_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
+                    IloNumExpr RHS_charge = cplex.sum(cplex.diff(eta_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
                             cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
-                    cplex.addLe(zeta_vector[j], RHS_charge);
+                    cplex.addLe(eta_vector[j], RHS_charge);
                 }
             }
         }
@@ -148,15 +148,15 @@ public class InstFullCharging {
         // Constraints to limit charge (2h)
         for (int j = 1; j <= nV; j++) {
             for (int k = nV + 1; k < nLocations; k++) {
-                cplex.addGe(zeta_vector[j], cplex.prod(q_matrix[j][k], z_matrix[j][k]));
+                cplex.addGe(eta_vector[j], cplex.prod(q_matrix[j][k], z_matrix[j][k]));
             }
         }
 
         // Constraints to recharge and leave depot with full charge (2i)
         for (int j = nV + 1; j <= nV + nC; j++) {
-            cplex.addEq(zeta_vector[j], Q);
+            cplex.addEq(eta_vector[j], Q);
         }
-        cplex.addEq(zeta_vector[0], Q);
+        cplex.addEq(eta_vector[0], Q);
 
         cplex.setOut(null);
         cplex.solve();
