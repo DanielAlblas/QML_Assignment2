@@ -1,11 +1,7 @@
-import ilog.concert.IloException;
-import ilog.concert.IloNumExpr;
-import ilog.concert.IloNumVar;
-import ilog.cplex.IloCplex;
 
 import java.util.*;
 
-public class InstFullCharging {
+public class Heuristic {
     private int nLocations;
     private int nV;
     private int nC;
@@ -15,12 +11,6 @@ public class InstFullCharging {
     private double[][] t_matrix;
     private double Q;
     private double T;
-//    private IloCplex cplex;
-//    private IloNumVar[][] z_matrix;
-//    private IloNumVar[] eta_vector;
-//    private IloNumVar[] psi_vector;
-
-//
     private ArrayList<ArrayList<Integer>> toursList;
     private ArrayList<ArrayList<Integer>> feasibleToursList;
     private ArrayList<ArrayList<Integer>> infeasibleToursList;
@@ -30,10 +20,7 @@ public class InstFullCharging {
     private List<Integer> chargingStations; //currently available to use
     private final ArrayList<ArrayList<Integer>> result = new ArrayList<>();
 
-    public InstFullCharging(double[][] distances, double maxElectricity, double maxTime, int numLocations, int numChargeStations) {
-        // Initialize the cplex solver
-//        cplex = new IloCplex();
-
+    public Heuristic(double[][] distances, double maxElectricity, double maxTime, int numLocations, int numChargeStations) {
         nLocations = distances.length; // = 28
         d_matrix = distances;
         Q = maxElectricity;
@@ -44,19 +31,6 @@ public class InstFullCharging {
         c_matrix = new double[nLocations][nLocations];
         q_matrix = new double[nLocations][nLocations];
         t_matrix = new double[nLocations][nLocations];
-
-        // Creating the decision variables: matrix x and vector y
-//        z_matrix = new IloNumVar[nLocations][nLocations];
-//        eta_vector = new IloNumVar[nLocations];
-//        psi_vector = new IloNumVar[nLocations];
-
-//        for (int i = 0; i < nLocations; i++) {
-//            for (int j = 0; j < nLocations; j++) {
-//                z_matrix[i][j] = cplex.boolVar("Arc (" + i + "," + j + ")");
-//            }
-//        }
-
-        // Calculate costs, required charge, and time, between locations
         for (int i = 0; i < nLocations; i++) {
             for (int j = 0; j < nLocations; j++) {
                 c_matrix[i][j] = 1 + d_matrix[i][j];
@@ -64,12 +38,12 @@ public class InstFullCharging {
                 t_matrix[i][j] = 5 + Math.pow(d_matrix[i][j], 0.9);
             }
         }
-        
+
         toursList = new ArrayList<>();
         for (int i = 1; i <= nV; i++) {
             toursList.add(new ArrayList<>(Arrays.asList(0, i, nLocations-1)));
         }
-        
+
         feasibleToursList = new ArrayList<>();
         infeasibleToursList = new ArrayList<>();
         for (ArrayList<Integer> tour : toursList) {
@@ -80,43 +54,29 @@ public class InstFullCharging {
             }
         }
 
-        // Insertion cost for each infeasible tour
-//        for (ArrayList<Integer> tour : infeasibleToursList) {
-//            int bestStation = 0;
-//            double minInsertionCost = Double.POSITIVE_INFINITY;
-//            ArrayList<Integer> tourWithStation = new ArrayList<>();
-//
-//            for (int f = nV; f <= nV + nC; f++) {
-//                ArrayList<Integer> newTour = new ArrayList<>(tour);
-//                newTour.remove(newTour.size() - 1);
-//                newTour.add(f);
-//                newTour.add(nLocations - 1);
-//                double cost = c_matrix[tour.get(1)][f] + c_matrix[f][nLocations-1] - c_matrix[tour.get(1)][nLocations-1];
-//                if (cost < minInsertionCost && isFeasible(newTour)) {
-//                    bestStation = f;
-//                    minInsertionCost = cost;
-//                    tourWithStation = new ArrayList<>(newTour);
-//                }
-//            }
-//
-//            if (bestStation != 0) {
-//                feasibleToursList.add(tourWithStation);
-//            }
-//        }
-        
         adjacentVertexToRoute = new LinkedHashMap<>();
         savingsPairList = new LinkedHashMap<>();
         //call step 4
         step4();
-//        for (int i = 0; i < nLocations; i++) {
-//            eta_vector[i] = cplex.numVar(0, Q);
-//            psi_vector[i] = cplex.numVar(0, T);
-//        }
+
+        double totalCost = 0;
+        System.out.printf("Solution:");
+        for (ArrayList<Integer> tour : feasibleToursList) {
+            System.out.print("Route: ");
+            for (Integer location : tour) {
+                System.out.printf(location + " ");
+            }
+            System.out.println();
+            double cost = computeCost(tour);
+            totalCost += cost;
+            System.out.println("Cost: " + cost);
+            System.out.println();
+        }
+        System.out.println(totalCost);
     }
 
     private void step4() {
         // Store all vertices that are adjacent to the depot in a tour
-        //List<Integer> adjVertices = new ArrayList<>();
         for (ArrayList<Integer> tour : feasibleToursList) {
             adjacentVertexToRoute.put(tour.get(1), tour);
         }
@@ -138,7 +98,7 @@ public class InstFullCharging {
                 (map1, map2) -> map2.getValue().compareTo(map1.getValue())
         );
 
-        
+
         for (Map.Entry<int[], Double> map : pairs) {
             savingsPairList.put(map.getKey(), map.getValue());
         }
@@ -147,7 +107,7 @@ public class InstFullCharging {
         for (int i = nV + 1; i <= nC+ nV; i++) {
             chargingStations.add(i);
         }
-        
+
         step5();
     }
 
@@ -284,14 +244,10 @@ public class InstFullCharging {
                     bestComb = comb;
                 }
             }
-
-//                newMergedTour.removeAll(bestComb);
-//                chargingStations.addAll(bestComb);
-
         }
         return bestComb;
     }
-    
+
     private double computeCost(ArrayList<Integer> tour) {
         double cost = 0;
         for (int i = 0; i < tour.size() - 1; i++) {
@@ -324,7 +280,7 @@ public class InstFullCharging {
                 xi = -currentChargeLevel;
                 for (int j = i+1; j < tour.size()-1; j++) {
                     xi += q_matrix[tour.get(i)][tour.get(j)];
-                    
+
                     if (tour.get(j) >= nV + 1 && tour.get(j) <= nV+nC+1) {
                         break;
                     }
@@ -362,163 +318,4 @@ public class InstFullCharging {
             findCombinations(elements, i + 1, newPartition, processResult);
         }
     }
-
-
-
-//    public void solveModel() throws IloException {
-//        // Create the objective function
-//        IloNumExpr obj = cplex.constant(0);
-//        for (int i = 0; i < nLocations; i++) {
-//            for (int j = 0; j < nLocations; j++) {
-//                obj = cplex.sum(obj, cplex.prod(c_matrix[i][j], z_matrix[i][j]));
-//            }
-//        }
-//        cplex.addMinimize(obj);
-//
-//        // Disallows travel to and form the same location
-//        for (int i = 0; i < nLocations; i++) {
-//            cplex.addEq(z_matrix[i][i], 0);
-//        }
-//        cplex.addEq(z_matrix[0][nLocations - 1], 0);
-//
-//        // Visit constraints for buyers (2b)
-//        for (int i = 1; i <= nV; i++) {
-//            IloNumExpr LHS2b = cplex.constant(0);
-//            for (int j = 1; j < nLocations; j++) {
-//                if (j != i) {
-//                    LHS2b = cplex.sum(LHS2b, z_matrix[i][j]);
-//                }
-//            }
-//            cplex.addEq(LHS2b, 1);
-//        }
-//
-//        // Visit constraints for charging stations (2c)
-//        for (int i = nV + 1; i <= nV + nC; i++) {
-//            IloNumExpr LHS2c = cplex.constant(0);
-//            for (int j = 1; j < nLocations; j++) {
-//                if (j != i) {
-//                    LHS2c = cplex.sum(LHS2c, z_matrix[i][j]);
-//                }
-//            }
-//            cplex.addLe(LHS2c, 1);
-//        }
-//
-//        // Constraints to ensure same route (2d)
-//        for (int k = 1; k <= nV + nC; k++) {
-//            IloNumExpr LHS2d = cplex.constant(0);
-//            for (int i = 0; i <= nV + nC; i++) {
-//                if (i != k) {
-//                    LHS2d = cplex.sum(LHS2d, z_matrix[i][k]);
-//                }
-//            }
-//
-//            for (int j = 1; j <= nV + nC + 1; j++) {
-//                if (j != k) {
-//                    LHS2d = cplex.diff(LHS2d, z_matrix[k][j]);
-//                }
-//            }
-//            cplex.addEq(LHS2d, 0);
-//        }
-//
-//        // Time constraints to disallow subtours (2e)
-//        for (int i = 0; i < nLocations; i++) {
-//            for (int j = 0; j < nLocations; j++) {
-//                if (i != j) {
-//                    IloNumExpr RHS_time = cplex.diff(cplex.sum(psi_vector[i], cplex.prod(t_matrix[i][j], z_matrix[i][j])),
-//                            cplex.prod(T, cplex.diff(1, z_matrix[i][j])));
-//                    cplex.addGe(psi_vector[j], RHS_time);
-//                }
-//            }
-//        }
-//
-//        // Constraints to limit time (2f)
-//        for (int j = 1; j < nLocations - 1; j++) {
-//            cplex.addLe(t_matrix[0][j], psi_vector[j]);
-//            cplex.addLe(psi_vector[j], T - t_matrix[j][nLocations - 1]);
-//        }
-//
-//        // Charge constraints to disallow subtours (2g)
-//        for (int i = 0; i < nLocations; i++) {
-//            for (int j = 0; j <= nV; j++) {
-//                if (i != j) {
-//                    IloNumExpr RHS_charge = cplex.sum(cplex.diff(eta_vector[i], cplex.prod(q_matrix[i][j], z_matrix[i][j])),
-//                            cplex.prod(Q, cplex.diff(1, z_matrix[i][j])));
-//                    cplex.addLe(eta_vector[j], RHS_charge);
-//                }
-//            }
-//        }
-//
-//        // Constraints to limit charge (2h)
-//        for (int j = 1; j <= nV; j++) {
-//            for (int k = nV + 1; k < nLocations; k++) {
-//                cplex.addGe(eta_vector[j], cplex.prod(q_matrix[j][k], z_matrix[j][k]));
-//            }
-//        }
-//
-//        // Constraints to recharge and leave depot with full charge (2i)
-//        for (int j = nV + 1; j <= nV + nC; j++) {
-//            cplex.addEq(eta_vector[j], Q);
-//        }
-//        cplex.addEq(eta_vector[0], Q);
-//
-//        cplex.setOut(null);
-//        cplex.solve();
-//
-//        // Query the solution
-//        if (cplex.getStatus() == IloCplex.Status.Optimal) {
-//            System.out.println("Found optimal solution!");
-//            System.out.println("Objective = " + cplex.getObjValue());
-//
-//            int route = 0;
-//            for (int i = 0; i < nLocations; i++) {
-//                if (cplex.getValue(z_matrix[0][i]) >= 0.5) {
-//                    route++;
-//                    System.out.print("Route " + route + ": 0");
-//                    int from = 0;
-//                    int to = i;
-//                    int numStationsVisited = 0;
-//                    List<Double> totalChargedAtStations = new ArrayList<>();
-//                    double totalDistance = 0;
-//                    double totalCost = 0;
-//                    double totalTime = 0;
-//                    double totalCharge = 0;
-//                    while (to < nLocations) {
-//                        if (cplex.getValue(z_matrix[from][to]) >= 0.5) {
-//                            totalDistance += d_matrix[from][to];
-//                            totalCost += c_matrix[from][to];
-//                            totalTime += t_matrix[from][to];
-//                            totalCharge += q_matrix[from][to];
-//                            if (to >= 21 && to <= 26) {
-//                                totalChargedAtStations.add(totalCharge);
-//                            }
-//                            //System.out.print("Go from " + from + " to " + to);
-//                            System.out.print(", " + to);
-//                            from = to;
-//                            to = 0;
-//                        } else {
-//                            to++;
-//                        }
-//                    }
-//                    System.out.println();
-//                    System.out.println("Total distance = " + totalDistance);
-//                    System.out.println("Total cost = " + totalCost);
-//                    System.out.println("Total time = " + totalTime);
-//                    System.out.println("Total charge = " + totalCharge);
-//                    System.out.print("Total used charge when the vehicle arrives at the charging stations: ");
-//                    if (!totalChargedAtStations.isEmpty()) {
-//                        for (Double c : totalChargedAtStations) {
-//                            System.out.print(c + "  ");
-//                        }
-//                    }
-//                    System.out.println();
-//                    System.out.println();
-//                }
-//            }
-//        } else {
-//            System.out.println("No optimal solution found");
-//        }
-//
-//        // Close the model
-//        cplex.close();
-//    }
 }
