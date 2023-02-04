@@ -115,7 +115,7 @@ public class Heuristic {
         int numFeasRoutes = feasibleToursList.size();
         while (!savingsPairList.isEmpty()) {
             int[] pair = pairs.get(0).getKey();
-            double saving = savingsPairList.get(pair);
+//            Double saving = savingsPairList.get(pair);
             savingsPairList.remove(pair);
 
             ArrayList<Integer> tour_i = adjacentVertexToRoute.get(pair[0]);
@@ -274,7 +274,6 @@ public class Heuristic {
         double currentChargeLevel = 50;
         double time = 0;
         for (int i = 0; i < tour.size()-1; i++) {
-            currentChargeLevel -= q_matrix[tour.get(i - 1)][tour.get(i)];
             double xi = 0;
             if (tour.get(i) >= nV + 1 && tour.get(i) <= nV+nC) {
                 xi = -currentChargeLevel;
@@ -288,6 +287,8 @@ public class Heuristic {
             }
             time += t_matrix[tour.get(i)][tour.get(i+1)];
             time += xi * xi / 100;
+            //TODO: might be wrong spot
+            currentChargeLevel -= q_matrix[tour.get(i)][tour.get(i+1)];
         }
 
         if (time <= T) {

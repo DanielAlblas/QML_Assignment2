@@ -105,7 +105,9 @@ public class Main {
             }
         }
 
-        ChargingVRP model2 = new ChargingVRP(distance_matrix, maximum_charge, time_limit, 20, 6);
-        model2.solveModel();
+//        ChargingVRP model2 = new ChargingVRP(distance_matrix, maximum_charge, time_limit, 20, 6);
+//        model2.solveModel();
+
+        Heuristic model2 = new Heuristic(distance_matrix, maximum_charge, time_limit, 20, 6);
     }
 }
