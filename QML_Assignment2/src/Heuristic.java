@@ -117,6 +117,7 @@ public class Heuristic {
             int[] pair = pairs.get(0).getKey();
 //            Double saving = savingsPairList.get(pair);
             savingsPairList.remove(pair);
+            pairs.remove(0);
 
             ArrayList<Integer> tour_i = adjacentVertexToRoute.get(pair[0]);
             ArrayList<Integer> tour_j = adjacentVertexToRoute.get(pair[1]);
@@ -186,6 +187,8 @@ public class Heuristic {
         int bestStation = 0;
         ArrayList<Integer> newMergedTour = new ArrayList<>();
 
+        //TODO: can be null, make sure that it doesnt call when null
+        //TODO: additionally, remove the charging stations if they are used
         for (Integer f : chargingStations) {
             mergedTour = new ArrayList<>(tour_i);
             mergedTour.add(f);
