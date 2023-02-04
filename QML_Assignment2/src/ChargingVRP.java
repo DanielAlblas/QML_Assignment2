@@ -10,8 +10,6 @@ public class ChargingVRP {
     private int nLocations;
     private int nV;
     private int nC;
-    private ArrayList<IloNumExpr> LHS_cuts;
-    private ArrayList<Integer> RHS_cuts;
     private double[][] d_matrix;
     private double[][] c_matrix;
     private double[][] q_matrix;
@@ -166,8 +164,8 @@ public class ChargingVRP {
             cuts = 0;
             cplex.setOut(null);
             cplex.solve();
-            ArrayList<IloNumExpr> LHS_cuts = new ArrayList<>();
-            ArrayList<Integer> RHS_cuts = new ArrayList<>();
+            ArrayList<IloNumExpr> LHS_new_cuts = new ArrayList<>();
+            ArrayList<Integer> RHS_new_cuts = new ArrayList<>();
 
             // Query the solution
             if (cplex.getStatus() == IloCplex.Status.Optimal) {
@@ -191,7 +189,6 @@ public class ChargingVRP {
                                     tau_vector.add(time);
                                     time = 0;
                                 }
-                                //TODO: might need to add 27
                                 from = to;
                                 to = 0;
                             } else {
@@ -213,17 +210,17 @@ public class ChargingVRP {
                                 LHS_new_cut_reverse = cplex.sum(LHS_new_cut_reverse, z_matrix[route.get(j + 1)][route.get(j)]);
                             }
                             LHS_new_cut_reverse = cplex.sum(LHS_new_cut_reverse, z_matrix[route.get(1)][route.get(route.size() - 1)]);
-                            LHS_cuts.add(LHS_new_cut);
-                            LHS_cuts.add(LHS_new_cut_reverse);
-                            RHS_cuts.add(route.size() - 2);
-                            RHS_cuts.add(route.size() - 2);
+                            LHS_new_cuts.add(LHS_new_cut);
+                            LHS_new_cuts.add(LHS_new_cut_reverse);
+                            RHS_new_cuts.add(route.size() - 2);
+                            RHS_new_cuts.add(route.size() - 2);
                         }
                     }
                 }
                 System.out.println("cuts: " + cuts);
-                if (cuts != 0) {
-                    for (int i = 0; i < LHS_cuts.size(); i++) {
-                        cplex.addLe(LHS_cuts.get(i), RHS_cuts.get(i));
+                if (cuts > 0) {
+                    for (int i = 0; i < LHS_new_cuts.size(); i++) {
+                        cplex.addLe(LHS_new_cuts.get(i), RHS_new_cuts.get(i));
                     }
                 } else {
                     System.out.println("Found optimal solution!");

@@ -19,8 +19,8 @@ public class ConvexQuadraticProgram {
         // Initialize the cplex solver
         cplex = new IloCplex();
 
-        zeta_vector = chargeUsed; // NOTE THAT zeta[0] AND zeta[p+1] NEED TO BE INITIALIZED EITHER HERE OR IN THE MAIN CLASS
-        tau_vector = timeElapsed; // NOTE THAT zeta[0] AND zeta[p+1] NEED TO BE INITIALIZED EITHER HERE OR IN THE MAIN CLASS
+        zeta_vector = chargeUsed;
+        tau_vector = timeElapsed;
         p = zeta_vector.size() - 1;
         Q = maxCharge;
         T = maxTime;
