@@ -218,6 +218,7 @@ public class ChargingVRP {
                     }
                 }
                 System.out.println("cuts: " + cuts);
+                System.out.println();
                 if (cuts > 0) {
                     for (int i = 0; i < LHS_new_cuts.size(); i++) {
                         cplex.addLe(LHS_new_cuts.get(i), RHS_new_cuts.get(i));
@@ -237,15 +238,15 @@ public class ChargingVRP {
                             List<Double> totalChargedAtStations = new ArrayList<>();
                             double totalDistance = 0;
                             double totalCost = 0;
-                            double totalTime = 0;
+                            double totalTravellingTime = 0;
                             double totalCharge = 0;
                             while (to < nLocations) {
                                 if (cplex.getValue(z_matrix[from][to]) >= 0.5) {
                                     totalDistance += d_matrix[from][to];
                                     totalCost += c_matrix[from][to];
-                                    totalTime += t_matrix[from][to];
+                                    totalTravellingTime += t_matrix[from][to];
                                     totalCharge += q_matrix[from][to];
-                                    if (to >= 21 && to <= 26) {
+                                    if (to >= 21 && to <= 27) {
                                         totalChargedAtStations.add(totalCharge);
                                     }
                                     //System.out.print("Go from " + from + " to " + to);
@@ -259,13 +260,18 @@ public class ChargingVRP {
                             System.out.println();
                             System.out.println("Total distance = " + totalDistance);
                             System.out.println("Total cost = " + totalCost);
-                            System.out.println("Total time = " + totalTime);
+                            System.out.println("Total travelling time = " + totalTravellingTime);
                             System.out.println("Total charge = " + totalCharge);
-                            System.out.print("Total used charge when the vehicle arrives at the charging stations: ");
+                            System.out.print("Total used charge between stations (including depot at end): ");
                             if (!totalChargedAtStations.isEmpty()) {
-                                for (Double c : totalChargedAtStations) {
-                                    System.out.print(c + "  ");
+                                Double previouslyChargedAtStations = totalChargedAtStations.get(0);
+                                for (int j = 1; j < totalChargedAtStations.size(); j++) {
+                                    System.out.print(previouslyChargedAtStations + " ");
+                                    previouslyChargedAtStations = totalChargedAtStations.get(j) - totalChargedAtStations.get(j-1);
                                 }
+//                                for (Double c : totalChargedAtStations) {
+//                                    System.out.print(c + "  ");
+//                                }
                             }
                             System.out.println();
                             System.out.println();
