@@ -1,3 +1,4 @@
+import java.sql.SQLOutput;
 import java.util.*;
 
 public class Heuristic {
@@ -58,13 +59,21 @@ public class Heuristic {
                 System.out.print(location + " ");
             }
             System.out.println();
+            double distance = computeDistance(tour);
             double cost = computeCost(tour);
+            double time = computeTime(tour);
+            double charge = computeCharge(tour);
             totalCost += cost;
+            System.out.println("Distance = " + distance);
             System.out.println("Cost = " + cost);
+            System.out.println("Time = " + time);
+            System.out.println("Charge = " + charge);
             System.out.println();
         }
         System.out.println("Objective = " + totalCost);
     }
+
+
 
     private void step2() {
         // Store all vertices that are adjacent to the leaving depot in a tour
@@ -294,10 +303,50 @@ public class Heuristic {
         return -1;
     }
 
+    private double computeDistance(ArrayList<Integer> tour) {
+        double distance = 0;
+        for (int i = 0; i < tour.size() - 1; i++) {
+            distance += d_matrix[tour.get(i)][tour.get(i + 1)];
+        }
+        return distance;
+    }
+
     private double computeCost(ArrayList<Integer> tour) {
         double cost = 0;
         for (int i = 0; i < tour.size() - 1; i++) {
             cost += c_matrix[tour.get(i)][tour.get(i + 1)];
+        }
+        return cost;
+    }
+
+    private double computeTime(ArrayList<Integer> tour) {
+        double currentChargeLevel = 50;
+        double time = 0;
+        for (int i = 0; i < tour.size() - 1; i++) {
+            double xi = 0;
+            if (tour.get(i) >= nV + 1 && tour.get(i) <= nV + nC) {
+                xi = -currentChargeLevel;
+                for (int j = i; j < tour.size() - 1; j++) {
+                    xi += q_matrix[tour.get(j)][tour.get(j + 1)];
+
+                    if (tour.get(j + 1) >= nV + 1 && tour.get(j + 1) <= nV + nC + 1) {
+                        break;
+                    }
+                }
+            }
+            xi = Math.min(Q, xi);
+            time += t_matrix[tour.get(i)][tour.get(i + 1)];
+            time += xi * xi / 100;
+            currentChargeLevel += Math.max(0, xi);
+            currentChargeLevel -= q_matrix[tour.get(i)][tour.get(i + 1)];
+        }
+        return time;
+    }
+
+    private double computeCharge(ArrayList<Integer> tour) {
+        double cost = 0;
+        for (int i = 0; i < tour.size() - 1; i++) {
+            cost += q_matrix[tour.get(i)][tour.get(i + 1)];
         }
         return cost;
     }
@@ -325,7 +374,8 @@ public class Heuristic {
                 }
             }
             xi = Math.min(Q, xi);
-            currentChargeLevel += Math.max(0, xi);
+            xi = Math.max(0, xi);
+            currentChargeLevel += xi;
             currentChargeLevel -= q_matrix[tour.get(i)][tour.get(i + 1)];
         }
         if (currentChargeLevel >= 0) {
