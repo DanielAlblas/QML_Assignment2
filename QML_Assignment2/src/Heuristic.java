@@ -128,6 +128,9 @@ public class Heuristic {
 //            System.out.println("Pair: " + pair[0] + ", " + pair[1]);
 //            Double saving = savingsPairList.get(pair);
             savingsPairList.remove(pair);
+            if ((pair[0] == 3 && pair[1] == 6) || pair[1] == 3 && pair[0] ==6) {
+                System.out.println("hi");
+            }
             pairList.remove(pair);
             pairs.remove(0);
 
@@ -194,11 +197,16 @@ public class Heuristic {
                 feasibleToursList.add(mergedTourReverse);
             }
             if (n != feasibleToursList.size()) {
+                List<int[]> listToBeRemoved = new ArrayList<>();
                 for (int[] p : pairList) {
                     if (p[0] == pair[0] || p[1] == pair[0] || p[0] == pair[1] || p[1] == pair[1]) {
-                        savingsPairList.remove(p);
-                        pairList.remove(p);
+                        listToBeRemoved.add(p);
+
                     }
+                }
+                for( int[] p : listToBeRemoved) {
+                    savingsPairList.remove(p);
+                    pairList.remove(p);
                 }
 //                for (int a = 0; a < nLocations; a++) {
 //                    int[] redundantPair = new int[] {pair[0], a};
