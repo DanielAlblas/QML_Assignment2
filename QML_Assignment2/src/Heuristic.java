@@ -279,10 +279,12 @@ public class Heuristic {
 
             if (listStations.size() > 1) {
                 findAllCombinations(listStations);
+            } else {
+                return new ArrayList<>(bestStation);
             }
 
             List<ArrayList<Integer>> feasibleRemovals = new ArrayList<>();
-            ArrayList<Integer> checkFeasibility = new ArrayList<>();
+            ArrayList<Integer> checkFeasibility;
             for (ArrayList<Integer> comb : result) {
                 checkFeasibility = new ArrayList<>(newMergedTour);
                 checkFeasibility.removeAll(comb);
