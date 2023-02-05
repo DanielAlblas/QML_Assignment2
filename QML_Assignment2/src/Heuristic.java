@@ -96,7 +96,7 @@ public class Heuristic {
                 int location_i = adjVertices.get(i);
                 int location_j = adjVertices.get(j);
                 if (location_i != location_j && isInTour(adjacentVertexToRoute.get(location_i), location_j) == -1
-                                             && isInTour(adjacentVertexToRoute.get(location_j), location_i) == -1) {
+                        && isInTour(adjacentVertexToRoute.get(location_j), location_i) == -1) {
                     int[] pair = new int[] {adjVertices.get(i), adjVertices.get(j)};
                     double saving = c_matrix[0][i] + c_matrix[0][j] - c_matrix[i][j];
                     savingsPairListUnsorted.put(pair, saving);
@@ -124,16 +124,17 @@ public class Heuristic {
         int numFeasRoutes = feasibleToursList.size();
         while (!savingsPairList.isEmpty()) {
             int n = feasibleToursList.size();
-            int[] pair = pairs.get(0).getKey();
+            int[] pair = pairList.get(0);
+//            int[] pair = pairs.get(0).getKey();
 //            System.out.println("Pair: " + pair[0] + ", " + pair[1]);
 //            Double saving = savingsPairList.get(pair);
             savingsPairList.remove(pair);
-            if ((pair[0] == 3 && pair[1] == 6) || pair[1] == 3 && pair[0] ==6) {
+            if ((pair[0] == 3 && pair[1] == 6) || pair[1] == 3 && pair[0] == 6) {
                 System.out.println("hi");
             }
             pairList.remove(pair);
-            pairs.remove(0);
-            
+//            pairs.remove(0);
+
 //            ArrayList<Integer> tour_i = adjacentVertexToRoute.get(pair[0]);
 //            ArrayList<Integer> tour_j = adjacentVertexToRoute.get(pair[1]);
 
@@ -220,24 +221,6 @@ public class Heuristic {
                     savingsPairList.remove(p);
                     pairList.remove(p);
                 }
-//                for (int a = 0; a < nLocations; a++) {
-//                    int[] redundantPair = new int[] {pair[0], a};
-//                    if (savingsPairList.keySet().contains(redundantPair)) {
-//                        savingsPairList.remove(redundantPair);
-//                    }
-//                    redundantPair = new int[] {a, pair[0]};
-//                    if (savingsPairList.keySet().contains(redundantPair)) {
-//                        savingsPairList.remove(redundantPair);
-//                    }
-//                    redundantPair = new int[] {pair[1], a};
-//                    if (savingsPairList.keySet().contains(redundantPair)) {
-//                        savingsPairList.remove(redundantPair);
-//                    }
-//                    redundantPair = new int[] {a, pair[1]};
-//                    if (savingsPairList.keySet().contains(redundantPair)) {
-//                        savingsPairList.remove(redundantPair);
-//                    }
-//                }
             }
         }
         if (feasibleToursList.size() != numFeasRoutes) {
