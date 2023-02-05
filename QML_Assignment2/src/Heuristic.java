@@ -79,6 +79,8 @@ public class Heuristic {
             System.out.println();
         }
         System.out.println(totalCost);
+        System.out.println("New");
+
     }
 
     private void step4() {
