@@ -76,8 +76,7 @@ public class ConvexQuadraticProgram {
             for (int i = 0; i <= p; i++) {
                 LHS += tau_vector.get(i);
             }
-            System.out.println("route r");
-            System.out.println("LHS: " + LHS);
+            System.out.println("new route");
             if (LHS > T) {
                 return false;
             } else {
@@ -85,7 +84,7 @@ public class ConvexQuadraticProgram {
                     for (int i = 1; i <= p; i++) {
                         double time_spent_at_station_i = cplex.getValue(xi[i]);
                         time_spent_at_station_i = time_spent_at_station_i*time_spent_at_station_i/100;
-                        System.out.println("time spent at station " + i + " in route r: " + time_spent_at_station_i);
+                        System.out.println("time spent at station " + i + " in above route: " + time_spent_at_station_i);
                     }
                 }
                 return true;

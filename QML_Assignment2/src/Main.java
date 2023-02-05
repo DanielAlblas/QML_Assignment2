@@ -51,9 +51,10 @@ public class Main {
         double maximum_charge = 50;
         double time_limit = 235;
 
-//        // Initialize and solve for the exercise 1
-//        VRP model = new VRP(distance_matrix, maximum_charge, time_limit);
-//        model.solveModel();
+        System.out.println("Exercise 1");
+        // Initialize and solve for the exercise 2
+        VRP model = new VRP(distance_matrix, maximum_charge, time_limit);
+        model.solveModel();
 
         int[][] coordinate_matrix_temp = new int[2][6];
         int[][] coordinate_matrix2 = new int[2][28];
@@ -105,9 +106,15 @@ public class Main {
             }
         }
 
-//        ChargingVRP model2 = new ChargingVRP(distance_matrix, maximum_charge, time_limit, 20, 6);
-//        model2.solveModel();
+        System.out.println();
+        System.out.println("Exercise 6");
+        // Initialize and solve for the exercise 6
+        ChargingVRP model2 = new ChargingVRP(distance_matrix, maximum_charge, time_limit, 20, 6);
+        model2.solveModel();
 
-        Heuristic model2 = new Heuristic(distance_matrix, maximum_charge, time_limit, 20, 6);
+        System.out.println();
+        System.out.println("Bonus exercise");
+        // Initialize and solve for the bonus exercise
+        Heuristic model3 = new Heuristic(distance_matrix, maximum_charge, time_limit, 20, 6);
     }
 }

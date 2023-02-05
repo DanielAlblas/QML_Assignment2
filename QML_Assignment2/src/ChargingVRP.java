@@ -217,7 +217,6 @@ public class ChargingVRP {
                         }
                     }
                 }
-                System.out.println("cuts: " + cuts);
                 System.out.println();
                 if (cuts > 0) {
                     for (int i = 0; i < LHS_new_cuts.size(); i++) {
@@ -234,7 +233,6 @@ public class ChargingVRP {
                             System.out.print("Route " + route + ": 0");
                             int from = 0;
                             int to = i;
-                            int numStationsVisited = 0;
                             List<Double> totalChargedAtStations = new ArrayList<>();
                             double totalDistance = 0;
                             double totalCost = 0;
@@ -249,7 +247,6 @@ public class ChargingVRP {
                                     if (to >= 21 && to <= 27) {
                                         totalChargedAtStations.add(totalCharge);
                                     }
-                                    //System.out.print("Go from " + from + " to " + to);
                                     System.out.print(", " + to);
                                     from = to;
                                     to = 0;
@@ -262,18 +259,15 @@ public class ChargingVRP {
                             System.out.println("Total cost = " + totalCost);
                             System.out.println("Total travelling time = " + totalTravellingTime);
                             System.out.println("Total charge = " + totalCharge);
-                            System.out.print("Total used charge between stations (including depot at end): ");
-                            if (!totalChargedAtStations.isEmpty()) {
+                            if (totalChargedAtStations.size() > 1) {
+                                System.out.print("Total used charge between stations (including depot at end): ");
                                 Double previouslyChargedAtStations = totalChargedAtStations.get(0);
                                 for (int j = 1; j < totalChargedAtStations.size(); j++) {
                                     System.out.print(previouslyChargedAtStations + " ");
                                     previouslyChargedAtStations = totalChargedAtStations.get(j) - totalChargedAtStations.get(j-1);
                                 }
-//                                for (Double c : totalChargedAtStations) {
-//                                    System.out.print(c + "  ");
-//                                }
+                                System.out.println();
                             }
-                            System.out.println();
                             System.out.println();
                         }
                     }

@@ -53,21 +53,17 @@ public class Heuristic {
         double totalCost = 0;
         System.out.println("Solution:");
         for (ArrayList<Integer> tour : toursList) {
-            System.out.print("Route: ");
+            System.out.print("Route = ");
             for (Integer location : tour) {
                 System.out.print(location + " ");
             }
             System.out.println();
             double cost = computeCost(tour);
             totalCost += cost;
-            System.out.println("Cost: " + cost);
-            System.out.println(isChargeFeasible(tour));
-            System.out.println(isTimeFeasible(tour));
+            System.out.println("Cost = " + cost);
             System.out.println();
         }
-        System.out.println(totalCost);
-
-        System.out.println(q_matrix[23][5] + q_matrix[5][17] + q_matrix[17][1] + q_matrix[1][4] + q_matrix[4][3] + q_matrix[3][18] + q_matrix[18][27]);
+        System.out.println("Objective = " + totalCost);
     }
 
     private void step4() {
@@ -90,14 +86,17 @@ public class Heuristic {
                     int sizeTourI = adjacentVertexToRoute.get(location_i).size();
                     int lastLocationInI = adjacentVertexToRoute.get(location_i).get(sizeTourI - 2);
                     double saving = c_matrix[lastLocationInI][nLocations-1] + c_matrix[0][location_j] - c_matrix[lastLocationInI][location_j];
-                    savingsPairListUnsorted.put(pair, saving);
-
+                    if (saving > 0) {
+                        savingsPairListUnsorted.put(pair, saving);
+                    }
 
                     pair = new int[]{adjVertices.get(j), adjVertices.get(i)};
                     int sizeTourJ = adjacentVertexToRoute.get(location_j).size();
                     int lastLocationInJ = adjacentVertexToRoute.get(location_j).get(sizeTourJ - 2);
                     saving = c_matrix[lastLocationInJ][nLocations-1] + c_matrix[0][location_i] - c_matrix[lastLocationInJ][location_i];
-                    savingsPairListUnsorted.put(pair, saving);
+                    if (saving > 0) {
+                        savingsPairListUnsorted.put(pair, saving);
+                    }
                 }
             }
         }
@@ -141,11 +140,14 @@ public class Heuristic {
 
             ArrayList<Integer> mergedTour = getMergedTour(tour_i, tour_j);
 
+            // If feasible we can replace the tour immediately
             if (isFeasible(mergedTour)) {
                 toursList.remove(tour_i); //remove also the tours that are merged
                 toursList.remove(tour_j); //remove also the tours that are merged
                 toursList.add(mergedTour);
-            } else if (isTimeFeasible(mergedTour)) {
+            }
+            // Else we check if it is time feasible, and try to insert a station
+            else if (isTimeFeasible(mergedTour)) {
                 mergedTour = insertedStationTour(pair, tour_i, tour_j, mergedTour);
                 if (mergedTour == null) {
                     break;
@@ -160,6 +162,7 @@ public class Heuristic {
                 toursList.remove(tour_j); //remove also the tours that are merged
                 toursList.add(mergedTour);
             }
+            // We remove all pairs that include vertices used to replace the tours
             if (n != toursList.size()) {
                 List<int[]> listToBeRemoved = new ArrayList<>();
                 for (int[] p : pairList) {
@@ -174,6 +177,7 @@ public class Heuristic {
                 }
             }
         }
+        // If we replaced any tours we call step 4
         if (toursList.size() != toursBeforeMerge) {
             step4();
         }
@@ -200,15 +204,11 @@ public class Heuristic {
         int bestStation = 0;
         ArrayList<Integer> newMergedTour = new ArrayList<>();
 
-        //TODO: can be null, make sure that it doesnt call when null
-        //TODO: additionally, remove the charging stations if they are used
         for (Integer f : chargingStations) {
             mergedTour = new ArrayList<>(tour_i);
             mergedTour.add(f);
             mergedTour.addAll(tour_j);
 
-//            double insertionCost = c_matrix[pair[0]][f] + c_matrix[f][pair[1]] - c_matrix[pair[0]][0] - c_matrix[pair[1]][0];
-            int location_i = pair[0];
             int location_j = pair[1];
             int lastLocationInI = tour_i.get(tour_i.size() - 1);
             double insertionCost = c_matrix[lastLocationInI][f] + c_matrix[f][location_j] - c_matrix[lastLocationInI][nLocations-1] - c_matrix[0][location_j];
@@ -218,11 +218,14 @@ public class Heuristic {
                 newMergedTour = new ArrayList<>(mergedTour);
             }
         }
+        // If a station can be added, add the best one
         if (bestStation != 0) {
             int finalBestStation = bestStation;
             chargingStations.removeIf(station -> station == finalBestStation);
             return newMergedTour;
-        } else {
+        }
+        // Else, return null (will be used in step 5 to determine if a station could be added)
+        else {
             return null;
         }
 
@@ -258,9 +261,11 @@ public class Heuristic {
             maxCombSize = Math.max(maxCombSize, comb.size());
         }
 
+        // Remove all feasible combination options that are not of the maximum size
         int finalMaxCombSize = maxCombSize;
         feasibleRemovals.removeIf(comb -> comb.size() < finalMaxCombSize);
 
+        // Find the combination option with minimum cost
         double minSavingCost = Double.POSITIVE_INFINITY;
         ArrayList<Integer> bestComb = new ArrayList<>();
         ArrayList<Integer> temp;
@@ -279,7 +284,7 @@ public class Heuristic {
         return bestComb;
     }
 
-    // Check if a location is part of the tour + return its position in the tour (return -1 if its not part of the tour)
+    // Check if a location is part of the tour + return its position in the tour (return -1 if it is not part of the tour)
     private int isInTour(ArrayList<Integer> tour, int location) {
         for (int i = 0; i < tour.size(); i++) {
             if (tour.get(i) == location) {
@@ -297,7 +302,6 @@ public class Heuristic {
         return cost;
     }
 
-    // TODO: Consider the time spent in the charging stations
     private boolean isFeasible(ArrayList<Integer> tour) {
         if (isChargeFeasible(tour) && isTimeFeasible(tour)) {
             return true;
@@ -324,7 +328,6 @@ public class Heuristic {
             currentChargeLevel += Math.max(0, xi);
             currentChargeLevel -= q_matrix[tour.get(i)][tour.get(i + 1)];
         }
-
         if (currentChargeLevel >= 0) {
             return true;
         } else {
@@ -351,10 +354,8 @@ public class Heuristic {
             xi = Math.max(0, xi);
             time += t_matrix[tour.get(i)][tour.get(i + 1)];
             time += xi * xi / 100;
-            //TODO: might be wrong spot
             currentChargeLevel -= q_matrix[tour.get(i)][tour.get(i + 1)];
         }
-
         if (time <= T) {
             return true;
         } else {

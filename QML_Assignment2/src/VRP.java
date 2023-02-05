@@ -141,7 +141,6 @@ public class VRP {
                             totalCost += c_matrix[from][to];
                             totalTime += t_matrix[from][to];
                             totalCharge += q_matrix[from][to];
-                            //System.out.print("Go from " + from + " to " + to);
                             System.out.print(", " + to);
                             from = to;
                             to = 0;
