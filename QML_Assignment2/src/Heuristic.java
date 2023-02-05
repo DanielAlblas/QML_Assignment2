@@ -280,7 +280,7 @@ public class Heuristic {
             if (listStations.size() > 1) {
                 findAllCombinations(listStations);
             } else {
-                return new ArrayList<>(bestStation);
+                return null;
             }
 
             List<ArrayList<Integer>> feasibleRemovals = new ArrayList<>();
