@@ -16,6 +16,7 @@ public class Heuristic {
     private ArrayList<ArrayList<Integer>> infeasibleToursList;
     private Map<Integer, ArrayList<Integer>> adjacentVertexToRoute;
     private Map<int[], Double> savingsPairList;
+    private List<int[]> pairList;
     private List<Map.Entry<int[], Double>> pairs;
     private List<Integer> chargingStations; //currently available to use
     private final ArrayList<ArrayList<Integer>> result = new ArrayList<>();
@@ -109,7 +110,9 @@ public class Heuristic {
         );
 
         savingsPairList = new LinkedHashMap<>();
+        pairList = new ArrayList<>();
         for (Map.Entry<int[], Double> map : pairs) {
+            pairList.add(map.getKey());
             savingsPairList.put(map.getKey(), map.getValue());
         }
 
@@ -190,24 +193,30 @@ public class Heuristic {
                 feasibleToursList.add(mergedTourReverse);
             }
             if (n != feasibleToursList.size()) {
-                for (int a = 0; a < nLocations; a++) {
-                    int[] redundantPair = new int[] {pair[0], a};
-                    if (savingsPairList.keySet().contains(redundantPair)) {
-                        savingsPairList.remove(redundantPair);
-                    }
-                    redundantPair = new int[] {a, pair[0]};
-                    if (savingsPairList.keySet().contains(redundantPair)) {
-                        savingsPairList.remove(redundantPair);
-                    }
-                    redundantPair = new int[] {pair[1], a};
-                    if (savingsPairList.keySet().contains(redundantPair)) {
-                        savingsPairList.remove(redundantPair);
-                    }
-                    redundantPair = new int[] {a, pair[1]};
-                    if (savingsPairList.keySet().contains(redundantPair)) {
-                        savingsPairList.remove(redundantPair);
+                for (int[] p : pairList) {
+                    if (p[0] == pair[0] || p[1] == pair[0] || p[0] == pair[1] || p[1] == pair[1]) {
+                        savingsPairList.remove(p);
+                        pairList.remove(p);
                     }
                 }
+//                for (int a = 0; a < nLocations; a++) {
+//                    int[] redundantPair = new int[] {pair[0], a};
+//                    if (savingsPairList.keySet().contains(redundantPair)) {
+//                        savingsPairList.remove(redundantPair);
+//                    }
+//                    redundantPair = new int[] {a, pair[0]};
+//                    if (savingsPairList.keySet().contains(redundantPair)) {
+//                        savingsPairList.remove(redundantPair);
+//                    }
+//                    redundantPair = new int[] {pair[1], a};
+//                    if (savingsPairList.keySet().contains(redundantPair)) {
+//                        savingsPairList.remove(redundantPair);
+//                    }
+//                    redundantPair = new int[] {a, pair[1]};
+//                    if (savingsPairList.keySet().contains(redundantPair)) {
+//                        savingsPairList.remove(redundantPair);
+//                    }
+//                }
             }
         }
         if (feasibleToursList.size() != numFeasRoutes) {
