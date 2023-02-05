@@ -129,9 +129,6 @@ public class Heuristic {
 //            System.out.println("Pair: " + pair[0] + ", " + pair[1]);
 //            Double saving = savingsPairList.get(pair);
             savingsPairList.remove(pair);
-            if ((pair[0] == 3 && pair[1] == 6) || pair[1] == 3 && pair[0] == 6) {
-                System.out.println("hi");
-            }
             pairList.remove(pair);
 //            pairs.remove(0);
 
@@ -266,6 +263,9 @@ public class Heuristic {
                 minInsertionCost = insertionCost;
                 newMergedTour = new ArrayList<>(mergedTour);
             }
+            System.out.println(isFeasible(mergedTour));
+            System.out.println("charge: " + isChargeFeasible(mergedTour));
+            System.out.println("time: " + isTimeFeasible(mergedTour));
         }
 
         if (bestStation != 0) {
@@ -337,12 +337,32 @@ public class Heuristic {
 
     // TODO: Consider the time spent in the charging stations
     private boolean isFeasible(ArrayList<Integer> tour) {
-        double charge = 0;
+        if (isChargeFeasible(tour) && isTimeFeasible(tour)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isChargeFeasible(ArrayList<Integer> tour) {
+        double currentChargeLevel = 50;
         for (int i = 0; i < tour.size()-1; i++) {
-            charge += q_matrix[tour.get(i)][tour.get(i+1)];
+            double xi = 0;
+            if (tour.get(i) >= nV + 1 && tour.get(i) <= nV+nC) {
+                xi = -currentChargeLevel;
+                for (int j = i; j < tour.size()-1; j++) {
+                    xi += q_matrix[tour.get(j)][tour.get(j+1)];
+
+                    if (tour.get(j+1) >= nV + 1 && tour.get(j+1) <= nV+nC+1) {
+                        break;
+                    }
+                }
+            }
+            currentChargeLevel += Math.max(0,xi);
+            currentChargeLevel -= q_matrix[tour.get(i)][tour.get(i+1)];
         }
 
-        if (charge <= Q && isTimeFeasible(tour)) {
+        if (currentChargeLevel >= 0) {
             return true;
         } else {
             return false;
@@ -356,14 +376,15 @@ public class Heuristic {
             double xi = 0;
             if (tour.get(i) >= nV + 1 && tour.get(i) <= nV+nC) {
                 xi = -currentChargeLevel;
-                for (int j = i+1; j < tour.size()-1; j++) {
-                    xi += q_matrix[tour.get(i)][tour.get(j)];
+                for (int j = i; j < tour.size()-1; j++) {
+                    xi += q_matrix[tour.get(j)][tour.get(j+1)];
 
-                    if (tour.get(j) >= nV + 1 && tour.get(j) <= nV+nC+1) {
+                    if (tour.get(j+1) >= nV + 1 && tour.get(j+1) <= nV+nC+1) {
                         break;
                     }
                 }
             }
+            xi = Math.max(0,xi);
             time += t_matrix[tour.get(i)][tour.get(i+1)];
             time += xi * xi / 100;
             //TODO: might be wrong spot
