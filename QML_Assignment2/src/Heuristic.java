@@ -128,6 +128,7 @@ public class Heuristic {
 //            System.out.println("Pair: " + pair[0] + ", " + pair[1]);
 //            Double saving = savingsPairList.get(pair);
             savingsPairList.remove(pair);
+            pairList.remove(pair);
             pairs.remove(0);
 
             ArrayList<Integer> tour_i = adjacentVertexToRoute.get(pair[0]);
