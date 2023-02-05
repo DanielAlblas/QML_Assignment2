@@ -81,7 +81,6 @@ public class Heuristic {
             System.out.println();
         }
         System.out.println(totalCost);
-        System.out.println(q_matrix[26][4] + q_matrix[4][19] + q_matrix[19][11] + q_matrix[11][12] + q_matrix[12][27]);
     }
 
     private void step4() {
