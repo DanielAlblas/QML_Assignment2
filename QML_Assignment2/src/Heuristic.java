@@ -47,8 +47,8 @@ public class Heuristic {
             chargingStations.add(i);
         }
 
-        // Call step 4
-        step4();
+        // Call step 2
+        step2();
 
         double totalCost = 0;
         System.out.println("Solution:");
@@ -66,7 +66,7 @@ public class Heuristic {
         System.out.println("Objective = " + totalCost);
     }
 
-    private void step4() {
+    private void step2() {
         // Store all vertices that are adjacent to the leaving depot in a tour
         adjacentVertexToRoute = new LinkedHashMap<>();
         for (ArrayList<Integer> tour : toursList) {
@@ -113,11 +113,11 @@ public class Heuristic {
             savingsPairList.put(map.getKey(), map.getValue());
         }
 
-        // Call step 5
-        step5();
+        // Call step 3
+        step3();
     }
 
-    private void step5() {
+    private void step3() {
         int toursBeforeMerge = toursList.size();
         while (!savingsPairList.isEmpty()) {
             int n = toursList.size();
@@ -177,9 +177,9 @@ public class Heuristic {
                 }
             }
         }
-        // If we replaced any tours we call step 4
+        // If we replaced any tours we call step 2
         if (toursList.size() != toursBeforeMerge) {
-            step4();
+            step2();
         }
 
     }
