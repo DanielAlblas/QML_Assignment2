@@ -304,7 +304,11 @@ public class Heuristic {
             mergedTour.add(f);
             mergedTour.addAll(tour_j);
 
-            double insertionCost = c_matrix[pair[0]][f] + c_matrix[f][pair[1]] - c_matrix[pair[0]][0] - c_matrix[pair[1]][0];
+//            double insertionCost = c_matrix[pair[0]][f] + c_matrix[f][pair[1]] - c_matrix[pair[0]][0] - c_matrix[pair[1]][0];
+            int location_i = pair[0];
+            int location_j = pair[1];
+            int lastLocationInI = tour_i.get(tour_i.size() - 1);
+            double insertionCost = c_matrix[lastLocationInI][f] + c_matrix[f][location_j] - c_matrix[lastLocationInI][nLocations-1] - c_matrix[0][location_j];
             if (insertionCost < minInsertionCost && isFeasible(mergedTour)) {
                 bestStation = f;
                 minInsertionCost = insertionCost;
