@@ -133,9 +133,21 @@ public class Heuristic {
             }
             pairList.remove(pair);
             pairs.remove(0);
+            
+//            ArrayList<Integer> tour_i = adjacentVertexToRoute.get(pair[0]);
+//            ArrayList<Integer> tour_j = adjacentVertexToRoute.get(pair[1]);
 
-            ArrayList<Integer> tour_i = adjacentVertexToRoute.get(pair[0]);
-            ArrayList<Integer> tour_j = adjacentVertexToRoute.get(pair[1]);
+            ArrayList<Integer> tour_i = new ArrayList<>();
+            ArrayList<Integer> tour_j = new ArrayList<>();
+
+            for (ArrayList<Integer> tour : feasibleToursList) {
+                if (tour.get(1) == pair[0]) {
+                    tour_i = tour;
+                }
+                if (tour.get(1) == pair[1]) {
+                    tour_j = tour;
+                }
+            }
 
             ArrayList<Integer> mergedTour = getMergedTour(tour_i, tour_j);
             ArrayList<Integer> mergedTourReverse = getMergedTour(tour_j, tour_i);
