@@ -76,9 +76,12 @@ public class Heuristic {
             double cost = computeCost(tour);
             totalCost += cost;
             System.out.println("Cost: " + cost);
+            System.out.println(isChargeFeasible(tour));
+            System.out.println(isTimeFeasible(tour));
             System.out.println();
         }
         System.out.println(totalCost);
+        System.out.println(q_matrix[26][4] + q_matrix[4][19] + q_matrix[19][11] + q_matrix[11][12] + q_matrix[12][27]);
     }
 
     private void step4() {
@@ -411,6 +414,7 @@ public class Heuristic {
                     }
                 }
             }
+            xi = Math.min(xi, Q);
             currentChargeLevel += Math.max(0, xi);
             currentChargeLevel -= q_matrix[tour.get(i)][tour.get(i + 1)];
         }
@@ -437,6 +441,7 @@ public class Heuristic {
                     }
                 }
             }
+            xi = Math.min(xi, Q);
             xi = Math.max(0, xi);
             time += t_matrix[tour.get(i)][tour.get(i + 1)];
             time += xi * xi / 100;
