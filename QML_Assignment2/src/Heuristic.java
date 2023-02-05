@@ -11,8 +11,6 @@ public class Heuristic {
     private double Q;
     private double T;
     private ArrayList<ArrayList<Integer>> toursList;
-    private ArrayList<ArrayList<Integer>> feasibleToursList;
-    private ArrayList<ArrayList<Integer>> infeasibleToursList;
     private Map<Integer, ArrayList<Integer>> adjacentVertexToRoute;
     private Map<int[], Double> savingsPairList;
     private List<int[]> pairList;
@@ -44,29 +42,17 @@ public class Heuristic {
             toursList.add(new ArrayList<>(Arrays.asList(0, i, nLocations - 1)));
         }
 
-        feasibleToursList = new ArrayList<>();
-        infeasibleToursList = new ArrayList<>();
-        for (ArrayList<Integer> tour : toursList) {
-            if (isFeasible(tour)) {
-                feasibleToursList.add(tour);
-            } else {
-                infeasibleToursList.add(tour);
-            }
-        }
-
         chargingStations = new ArrayList<>();
         for (int i = nV + 1; i <= nC + nV; i++) {
             chargingStations.add(i);
         }
 
-//        adjacentVertexToRoute = new LinkedHashMap<>();
-//        savingsPairList = new LinkedHashMap<>();
-        //call step 4
+        // Call step 4
         step4();
 
         double totalCost = 0;
         System.out.println("Solution:");
-        for (ArrayList<Integer> tour : feasibleToursList) {
+        for (ArrayList<Integer> tour : toursList) {
             System.out.print("Route: ");
             for (Integer location : tour) {
                 System.out.print(location + " ");
@@ -81,12 +67,13 @@ public class Heuristic {
     }
 
     private void step4() {
-        // Store all vertices that are adjacent to the depot in a tour
+        // Store all vertices that are adjacent to the leaving depot in a tour
         adjacentVertexToRoute = new LinkedHashMap<>();
-        for (ArrayList<Integer> tour : feasibleToursList) {
+        for (ArrayList<Integer> tour : toursList) {
             adjacentVertexToRoute.put(tour.get(1), tour);
         }
 
+        // Create an unsorted SPL
         List<Integer> adjVertices = new ArrayList<>(adjacentVertexToRoute.keySet());
         Map<int[], Double> savingsPairListUnsorted = new LinkedHashMap<>();
         for (int i = 0; i < adjVertices.size() - 1; i++) {
@@ -96,7 +83,6 @@ public class Heuristic {
                 if (location_i != location_j && isInTour(adjacentVertexToRoute.get(location_i), location_j) == -1
                         && isInTour(adjacentVertexToRoute.get(location_j), location_i) == -1) {
                     int[] pair = new int[]{adjVertices.get(i), adjVertices.get(j)};
-//                    double saving = c_matrix[0][location_i] + c_matrix[0][location_j] - c_matrix[location_i][location_j];
                     int sizeTourI = adjacentVertexToRoute.get(location_i).size();
                     int lastLocationInI = adjacentVertexToRoute.get(location_i).get(sizeTourI - 2);
                     double saving = c_matrix[lastLocationInI][nLocations-1] + c_matrix[0][location_j] - c_matrix[lastLocationInI][location_j];
@@ -105,11 +91,11 @@ public class Heuristic {
             }
         }
 
+        // Sort the SPL
         pairs = new LinkedList<>(savingsPairListUnsorted.entrySet());
         Collections.sort(pairs,
                 (map1, map2) -> map2.getValue().compareTo(map1.getValue())
         );
-
         savingsPairList = new LinkedHashMap<>();
         pairList = new ArrayList<>();
         for (Map.Entry<int[], Double> map : pairs) {
@@ -117,29 +103,23 @@ public class Heuristic {
             savingsPairList.put(map.getKey(), map.getValue());
         }
 
+        // Call step 5
         step5();
     }
 
     private void step5() {
-//        System.out.println("Step 5");
-        int numFeasRoutes = feasibleToursList.size();
+        int toursBeforeMerge = toursList.size();
         while (!savingsPairList.isEmpty()) {
-            int n = feasibleToursList.size();
+            int n = toursList.size();
             int[] pair = pairList.get(0);
-//            int[] pair = pairs.get(0).getKey();
-//            System.out.println("Pair: " + pair[0] + ", " + pair[1]);
-//            Double saving = savingsPairList.get(pair);
+
             savingsPairList.remove(pair);
             pairList.remove(pair);
-//            pairs.remove(0);
-
-//            ArrayList<Integer> tour_i = adjacentVertexToRoute.get(pair[0]);
-//            ArrayList<Integer> tour_j = adjacentVertexToRoute.get(pair[1]);
 
             ArrayList<Integer> tour_i = new ArrayList<>();
             ArrayList<Integer> tour_j = new ArrayList<>();
 
-            for (ArrayList<Integer> tour : feasibleToursList) {
+            for (ArrayList<Integer> tour : toursList) {
                 if (tour.get(1) == pair[0]) {
                     tour_i = tour;
                 }
@@ -152,13 +132,13 @@ public class Heuristic {
             ArrayList<Integer> mergedTourReverse = getMergedTour(tour_j, tour_i);
 
             if (isFeasible(mergedTour)) {
-                feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                feasibleToursList.add(mergedTour);
+                toursList.remove(tour_i); //remove also the tours that are merged
+                toursList.remove(tour_j); //remove also the tours that are merged
+                toursList.add(mergedTour);
             } else if (isFeasible(mergedTourReverse)) {
-                feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                feasibleToursList.add(mergedTourReverse);
+                toursList.remove(tour_i); //remove also the tours that are merged
+                toursList.remove(tour_j); //remove also the tours that are merged
+                toursList.add(mergedTourReverse);
             } else if (isTimeFeasible(mergedTour) && isTimeFeasible(mergedTourReverse)) {
                 mergedTour = insertedStationTour(pair, tour_i, tour_j, mergedTour);
                 mergedTourReverse = insertedStationTour(new int[]{pair[1], pair[0]}, tour_j, tour_i, mergedTourReverse);
@@ -172,38 +152,38 @@ public class Heuristic {
                         mergedTourReverse.removeAll(removedCombinationJI);
                         if (removedCombinationIJ.size() > removedCombinationJI.size()) {
                             chargingStations.addAll(removedCombinationIJ); // Added
-                            feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                            feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                            feasibleToursList.add(mergedTour);
+                            toursList.remove(tour_i); //remove also the tours that are merged
+                            toursList.remove(tour_j); //remove also the tours that are merged
+                            toursList.add(mergedTour);
                         } else if (removedCombinationIJ.size() < removedCombinationJI.size()) {
                             chargingStations.addAll(removedCombinationJI); // Added
-                            feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                            feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                            feasibleToursList.add(mergedTourReverse);
+                            toursList.remove(tour_i); //remove also the tours that are merged
+                            toursList.remove(tour_j); //remove also the tours that are merged
+                            toursList.add(mergedTourReverse);
                         } else {
                             double costIJ = computeCost(mergedTour);
                             double costJI = computeCost(mergedTourReverse);
                             if (costIJ >= costJI) {
                                 chargingStations.addAll(removedCombinationJI); // Added
-                                feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                                feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                                feasibleToursList.add(mergedTourReverse);
+                                toursList.remove(tour_i); //remove also the tours that are merged
+                                toursList.remove(tour_j); //remove also the tours that are merged
+                                toursList.add(mergedTourReverse);
                             } else {
                                 chargingStations.addAll(removedCombinationIJ); // Added
-                                feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                                feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                                feasibleToursList.add(mergedTour);
+                                toursList.remove(tour_i); //remove also the tours that are merged
+                                toursList.remove(tour_j); //remove also the tours that are merged
+                                toursList.add(mergedTour);
                             }
                         }
                     } else if (stationsInRouteReverse.size() > 1) {
                         // stationsInRoute <= 1 -> size of the tour is smaller than that of its reverse
-                        feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                        feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                        feasibleToursList.add(mergedTour);
+                        toursList.remove(tour_i); //remove also the tours that are merged
+                        toursList.remove(tour_j); //remove also the tours that are merged
+                        toursList.add(mergedTour);
                     } else if (stationsInRoute.size() > 1) {
-                        feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                        feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                        feasibleToursList.add(mergedTourReverse);
+                        toursList.remove(tour_i); //remove also the tours that are merged
+                        toursList.remove(tour_j); //remove also the tours that are merged
+                        toursList.add(mergedTourReverse);
                     }
 
                 } else if (mergedTour != null) {
@@ -213,9 +193,9 @@ public class Heuristic {
                         mergedTour.removeAll(removedCombinationIJ);
                         chargingStations.addAll(removedCombinationIJ); // Added
                     }
-                    feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                    feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                    feasibleToursList.add(mergedTour);
+                    toursList.remove(tour_i); //remove also the tours that are merged
+                    toursList.remove(tour_j); //remove also the tours that are merged
+                    toursList.add(mergedTour);
                 } else if (mergedTourReverse != null) {
                     ArrayList<Integer> stationsInRoute = stationsInRoute(mergedTourReverse);
                     if (stationsInRoute.size() > 1) {
@@ -223,9 +203,9 @@ public class Heuristic {
                         mergedTourReverse.removeAll(removedCombinationJI);
                         chargingStations.addAll(removedCombinationJI); // Added
                     }
-                    feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                    feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                    feasibleToursList.add(mergedTourReverse);
+                    toursList.remove(tour_i); //remove also the tours that are merged
+                    toursList.remove(tour_j); //remove also the tours that are merged
+                    toursList.add(mergedTourReverse);
                 }
             } else if (isTimeFeasible(mergedTour)) {
                 mergedTour = insertedStationTour(pair, tour_i, tour_j, mergedTour);
@@ -238,9 +218,9 @@ public class Heuristic {
                     mergedTour.removeAll(removedCombinationIJ);
                     chargingStations.addAll(removedCombinationIJ); // Added
                 }
-                feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                feasibleToursList.add(mergedTour);
+                toursList.remove(tour_i); //remove also the tours that are merged
+                toursList.remove(tour_j); //remove also the tours that are merged
+                toursList.add(mergedTour);
             } else if (isTimeFeasible(mergedTourReverse)) {
                 mergedTourReverse = insertedStationTour(new int[]{pair[1], pair[0]}, tour_j, tour_i, mergedTourReverse);
                 if (mergedTourReverse == null) {
@@ -252,11 +232,11 @@ public class Heuristic {
                     mergedTourReverse.removeAll(removedCombinationJI);
                     chargingStations.addAll(removedCombinationJI); // Added
                 }
-                feasibleToursList.remove(tour_i); //remove also the tours that are merged
-                feasibleToursList.remove(tour_j); //remove also the tours that are merged
-                feasibleToursList.add(mergedTourReverse);
+                toursList.remove(tour_i); //remove also the tours that are merged
+                toursList.remove(tour_j); //remove also the tours that are merged
+                toursList.add(mergedTourReverse);
             }
-            if (n != feasibleToursList.size()) {
+            if (n != toursList.size()) {
                 List<int[]> listToBeRemoved = new ArrayList<>();
                 for (int[] p : pairList) {
                     if (p[0] == pair[0] || p[1] == pair[0] || p[0] == pair[1] || p[1] == pair[1]) {
@@ -270,7 +250,7 @@ public class Heuristic {
                 }
             }
         }
-        if (feasibleToursList.size() != numFeasRoutes) {
+        if (toursList.size() != toursBeforeMerge) {
             step4();
         }
 
