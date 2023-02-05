@@ -99,7 +99,10 @@ public class Heuristic {
                 if (location_i != location_j && isInTour(adjacentVertexToRoute.get(location_i), location_j) == -1
                         && isInTour(adjacentVertexToRoute.get(location_j), location_i) == -1) {
                     int[] pair = new int[]{adjVertices.get(i), adjVertices.get(j)};
-                    double saving = c_matrix[0][i] + c_matrix[0][j] - c_matrix[i][j];
+//                    double saving = c_matrix[0][location_i] + c_matrix[0][location_j] - c_matrix[location_i][location_j];
+                    int sizeTourI = adjacentVertexToRoute.get(location_i).size();
+                    int lastLocationInI = adjacentVertexToRoute.get(location_i).get(sizeTourI - 2);
+                    double saving = c_matrix[lastLocationInI][nLocations-1] + c_matrix[0][location_j] - c_matrix[lastLocationInI][location_j];
                     savingsPairListUnsorted.put(pair, saving);
                 }
             }
@@ -303,7 +306,11 @@ public class Heuristic {
             mergedTour.add(f);
             mergedTour.addAll(tour_j);
 
-            double insertionCost = c_matrix[pair[0]][f] + c_matrix[f][pair[1]] - c_matrix[pair[0]][0] - c_matrix[pair[1]][0];
+//            double insertionCost = c_matrix[pair[0]][f] + c_matrix[f][pair[1]] - c_matrix[pair[0]][0] - c_matrix[pair[1]][0];
+            int location_i = pair[0];
+            int location_j = pair[1];
+            int lastLocationInI = tour_i.get(tour_i.size() - 1);
+            double insertionCost = c_matrix[lastLocationInI][f] + c_matrix[f][location_j] - c_matrix[lastLocationInI][nLocations-1] - c_matrix[0][location_j];
             if (insertionCost < minInsertionCost && isFeasible(mergedTour)) {
                 bestStation = f;
                 minInsertionCost = insertionCost;
@@ -322,7 +329,6 @@ public class Heuristic {
 
     private ArrayList<Integer> getMergedTour(ArrayList<Integer> tour_i, ArrayList<Integer> tour_j) {
         ArrayList<Integer> mergedTour = new ArrayList<>();
-//        System.out.println(tour_i);
         mergedTour.add(0);
         for (int i = 1; i < tour_i.size() - 1; i++) {
             mergedTour.add(tour_i.get(i));
